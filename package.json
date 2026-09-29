@@ -13,13 +13,13 @@
     "accounts",
     "usage-limits"
   ],
-  "homepage": "https://github.com/kapybara-org/zerosub#readme",
+  "homepage": "https://github.com/kredi-kr/zerosub#readme",
   "bugs": {
-    "url": "https://github.com/kapybara-org/zerosub/issues"
+    "url": "https://github.com/kredi-kr/zerosub/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kapybara-org/zerosub.git"
+    "url": "git+https://github.com/kredi-kr/zerosub.git"
   },
   "license": "MIT",
   "author": "Kapybara",

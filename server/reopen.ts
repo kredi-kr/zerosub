@@ -25,7 +25,7 @@ export class Reopener {
   /** `timedOut`: the command was stopped before the daemon answered, so the reload may still finish. */
   async reopen(agentId: string): Promise<{ ok: true } | { ok: false; error: string; timedOut: boolean }> {
     const cli = await this.locate();
-    if (!cli) return { ok: false, error: "The paseo command-line tool was not found on the daemon machine.", timedOut: false };
+    if (!cli) return { ok: false, error: "Paseo 데몬이 실행 중인 컴퓨터에서 paseo 명령어 도구를 찾지 못했습니다.", timedOut: false };
     return new Promise((resolve) => {
       execFile(
         cli,
@@ -43,9 +43,9 @@ export class Reopener {
 
 function explainFailure(detail: string): string {
   if (/transport closed|cannot connect|cannot reach|password|unauthori[sz]ed|DAEMON_NOT_RUNNING/i.test(detail)) {
-    return "Paseo's CLI could not connect to this daemon (it may require a password). The agent switches accounts the next time its session starts.";
+    return "Paseo 명령어 도구가 이 Paseo 데몬에 연결하지 못했습니다 (비밀번호가 필요할 수 있습니다). 에이전트는 다음에 세션이 시작될 때 계정을 바꿉니다.";
   }
-  return detail || "Reload failed.";
+  return detail || "다시 불러오기에 실패했습니다.";
 }
 
 async function isExecutable(path: string): Promise<boolean> {

@@ -29,7 +29,7 @@ export const ResetOfferSchema = z.object({
   blockedReason: z.string().nullable(),
   /** Use-by date of the next reset, if it expires. */
   expiresAt: z.string().nullable(),
-  /** Which limits a reset refills, e.g. "5-hour", "weekly". Empty when the provider doesn't say. */
+  /** Which limits a reset refills, e.g. "5시간", "주간". Empty when the provider doesn't say. */
   refills: z.array(z.string()),
   /** The provider's own name for the reset, if it gives one. */
   label: z.string().nullable(),

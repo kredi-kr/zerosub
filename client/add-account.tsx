@@ -89,20 +89,20 @@ export function AddAccountModal({
     [family, begin],
   );
 
-  const title = accountId ? "Sign in again" : `Add ${FAMILY_LABEL[family]} account`;
+  const title = accountId ? "다시 로그인" : `${FAMILY_LABEL[family]} 계정 추가`;
   let body: ReactNode;
   if (startError) {
     body = (
       <>
         <Text style={text.danger}>{startError}</Text>
         <Row>
-          <Button theme={theme} label="Close" tooltip="Close without adding an account" tooltipAlign="end" onPress={close} />
+          <Button theme={theme} label="닫기" tooltip="계정을 추가하지 않고 닫습니다" tooltipAlign="end" onPress={close} />
           <Button
             theme={theme}
             tone="primary"
             icon="RefreshCw"
-            label="Try again"
-            tooltip="Start the sign-in again"
+            label="다시 시도"
+            tooltip="로그인을 처음부터 다시 시작합니다"
             tooltipAlign="end"
             onPress={() => void begin(method)}
           />
@@ -110,7 +110,7 @@ export function AddAccountModal({
       </>
     );
   } else if (!login || login.step === "starting") {
-    body = <Waiting theme={theme} label="Preparing sign-in…" />;
+    body = <Waiting theme={theme} label="로그인 준비 중…" />;
   } else if (login.step === "waiting") {
     body = (
       <SignInSteps
@@ -124,22 +124,22 @@ export function AddAccountModal({
       />
     );
   } else if (login.step === "verifying") {
-    body = <Waiting theme={theme} label="Checking your account…" />;
+    body = <Waiting theme={theme} label="계정 확인 중…" />;
   } else if (login.step === "done") {
     const who = account
       ? `${account.label}${account.email && account.email !== account.label ? ` (${account.email})` : ""}${
           account.plan ? ` · ${formatPlan(account.plan)}` : ""
         }`
-      : "The account";
+      : "계정";
     body = (
       <>
-        <Text style={text.heading}>You're signed in</Text>
+        <Text style={text.heading}>로그인되었습니다</Text>
         <Text style={text.body}>
-          {who} is ready. New {FAMILY_LABEL[family]} agents{multiHost ? ` on ${host.label}` : ""} can use it, and you can
-          move an agent to it from the account button in the message box.
+          {who} 계정을 쓸 준비가 되었습니다. {multiHost ? `${host.label}의 ` : ""}새 {FAMILY_LABEL[family]} 에이전트가 이 계정을 쓸 수
+          있고, 메시지 입력창의 계정 버튼에서 기존 에이전트를 이 계정으로 옮길 수도 있습니다.
         </Text>
         <Row>
-          <Button theme={theme} tone="primary" label="Done" tooltip="Close this window" tooltipAlign="end" onPress={onClose} />
+          <Button theme={theme} tone="primary" label="완료" tooltip="이 창을 닫습니다" tooltipAlign="end" onPress={onClose} />
         </Row>
       </>
     );
@@ -147,16 +147,16 @@ export function AddAccountModal({
     body = (
       <>
         <Text style={login.step === "failed" ? text.danger : text.muted}>
-          {login.message ?? (login.step === "canceled" ? "Sign-in was canceled." : "Sign-in failed.")}
+          {login.message ?? (login.step === "canceled" ? "로그인이 취소되었습니다." : "로그인하지 못했습니다.")}
         </Text>
         <Row>
-          <Button theme={theme} label="Close" tooltip="Close without adding an account" tooltipAlign="end" onPress={close} />
+          <Button theme={theme} label="닫기" tooltip="계정을 추가하지 않고 닫습니다" tooltipAlign="end" onPress={close} />
           <Button
             theme={theme}
             tone="primary"
             icon="RefreshCw"
-            label="Try again"
-            tooltip="Start the sign-in again"
+            label="다시 시도"
+            tooltip="로그인을 처음부터 다시 시작합니다"
             tooltipAlign="end"
             onPress={() => void begin(method)}
           />
@@ -169,7 +169,7 @@ export function AddAccountModal({
     <Modal title={title} open onOpenChange={(open) => (open ? undefined : close())}>
       <Modal.Content>
         {multiHost && !accountId && login?.step !== "done" ? (
-          <Text style={text.small}>Adds the account on {host.label} only. Other hosts sign in separately.</Text>
+          <Text style={text.small}>{host.label}에만 계정을 추가합니다. 다른 호스트에서는 따로 로그인하세요.</Text>
         ) : null}
         {body}
       </Modal.Content>
@@ -212,9 +212,9 @@ function SignInSteps({
     async (value: string, what: string) => {
       try {
         await copyText(value);
-        toast.show(`${what} copied`, { variant: "success" });
+        toast.show(`${what}를 복사했습니다`, { variant: "success" });
       } catch {
-        toast.error("Couldn't copy. Select the text and copy it yourself.");
+        toast.error("복사하지 못했습니다. 글자를 직접 선택해 복사하세요.");
       }
     },
     [toast],
@@ -251,19 +251,19 @@ function SignInSteps({
   const canSwitch = browserUsable && (family === "codex" || (Boolean(login.url) && Boolean(login.codeUrl)));
   return (
     <View style={{ gap: 16 }}>
-      <Step theme={theme} number={1} title={`Open the ${service} sign-in page`}>
+      <Step theme={theme} number={1} title={`${service} 로그인 페이지 열기`}>
         <Text style={text.muted}>
           {pasteFlow || login.userCode
-            ? "Sign in with the account you want to add. This works on any device, including your phone."
-            : "Sign in with the account you want to add, using a browser on the host's own computer. It finishes by itself."}
+            ? "추가할 계정으로 로그인하세요. 휴대폰을 포함해 어떤 기기에서든 됩니다."
+            : "호스트 컴퓨터의 브라우저에서 추가할 계정으로 로그인하세요. 로그인하면 저절로 마무리됩니다."}
         </Text>
         <Row start>
           <Button
             theme={theme}
             tone="primary"
             icon="ExternalLink"
-            label="Open sign-in page"
-            tooltip={`Open the ${service} sign-in page in your browser`}
+            label="로그인 페이지 열기"
+            tooltip={`브라우저에서 ${service} 로그인 페이지를 엽니다`}
             tooltipAlign="start"
             disabled={!link}
             onPress={open}
@@ -272,17 +272,17 @@ function SignInSteps({
             <Button
               theme={theme}
               icon="Copy"
-              label="Copy link"
-              tooltip="Copy the sign-in link, for example to open it on another device"
+              label="링크 복사"
+              tooltip="로그인 링크를 복사합니다. 다른 기기에서 열 때 쓰세요"
               tooltipAlign="start"
-              onPress={() => void copy(link, "Link")}
+              onPress={() => void copy(link, "링크")}
             />
           ) : null}
         </Row>
       </Step>
 
       {login.userCode ? (
-        <Step theme={theme} number={2} title="Enter this code on that page">
+        <Step theme={theme} number={2} title="그 페이지에 이 코드를 입력하세요">
           <Text selectable style={text.mono}>
             {login.userCode}
           </Text>
@@ -290,39 +290,39 @@ function SignInSteps({
             <Button
               theme={theme}
               icon="Copy"
-              label="Copy code"
-              tooltip="Copy the code to enter on the sign-in page"
+              label="코드 복사"
+              tooltip="로그인 페이지에 입력할 코드를 복사합니다"
               tooltipAlign="start"
-              onPress={() => void copy(login.userCode ?? "", "Code")}
+              onPress={() => void copy(login.userCode ?? "", "코드")}
             />
           </Row>
           <Text style={text.small}>
-            If the page says code sign-in is off, turn on device code sign-in in ChatGPT → Settings → Security (or ask
-            your workspace admin), then try again.
+            페이지에 코드 로그인이 꺼져 있다고 나오면, ChatGPT → 설정 → 보안에서 기기 코드 로그인을 켠 뒤(또는 워크스페이스
+            관리자에게 요청한 뒤) 다시 시도하세요.
           </Text>
         </Step>
       ) : null}
 
       {pasteFlow ? (
-        <Step theme={theme} number={2} title="Paste the code shown after you sign in">
+        <Step theme={theme} number={2} title="로그인 후 나오는 코드를 붙여넣으세요">
           <TextInput
             value={code}
             onChangeText={setCode}
-            placeholder="Paste code"
+            placeholder="코드 붙여넣기"
             placeholderTextColor={theme.colors.foregroundMuted}
             autoCapitalize="none"
             autoCorrect={false}
             onSubmitEditing={() => void submit()}
             style={inputStyle}
-            accessibilityLabel="Sign-in code"
+            accessibilityLabel="로그인 코드"
           />
           {codeError ? <Text style={text.danger}>{codeError}</Text> : null}
           <Row start>
             <Button
               theme={theme}
               tone="primary"
-              label="Continue"
-              tooltip="Finish signing in with the pasted code"
+              label="계속"
+              tooltip="붙여넣은 코드로 로그인을 마칩니다"
               tooltipAlign="start"
               busy={submitting}
               disabled={!code.trim()}
@@ -331,7 +331,7 @@ function SignInSteps({
           </Row>
         </Step>
       ) : (
-        <Waiting theme={theme} label="Waiting for you to finish signing in…" />
+        <Waiting theme={theme} label="로그인을 마칠 때까지 기다리는 중…" />
       )}
 
       {login.message ? <Text style={text.small}>{login.message}</Text> : null}
@@ -343,7 +343,7 @@ function SignInSteps({
           style={{ alignSelf: "flex-start", paddingVertical: 4 }}
         >
           <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "600" }}>
-            {method === "code" ? "At the host's computer? Use its browser instead" : "On a different device? Use a code instead"}
+            {method === "code" ? "호스트 컴퓨터 앞에 있나요? 그 컴퓨터의 브라우저로 로그인하기" : "다른 기기에서 하나요? 코드로 로그인하기"}
           </Text>
         </Pressable>
       ) : null}

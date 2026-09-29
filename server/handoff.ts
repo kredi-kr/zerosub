@@ -132,7 +132,7 @@ export async function continueInNewAgent(options: {
   const { paseo, sourceAgentId } = options;
   const refreshed = await paseo.agents.ref(sourceAgentId).refresh();
   const source = refreshed?.agent;
-  if (!source) throw new Error("The original agent is no longer available.");
+  if (!source) throw new Error("원래 에이전트를 더 이상 찾을 수 없습니다.");
 
   let timeline = options.timeline;
   if (!timeline) {
@@ -147,13 +147,13 @@ export async function continueInNewAgent(options: {
   const model = target
     ? await defaultModel(paseo, provider)
     : (source.model ?? source.runtimeInfo?.model ?? (await defaultModel(paseo, provider)));
-  if (!model) throw new Error(`Couldn't tell which ${provider} model to use for the new agent.`);
+  if (!model) throw new Error(`새 에이전트에 쓸 ${provider} 모델을 알 수 없습니다.`);
 
   const agentId = randomUUID();
   await options.bind(agentId);
   const title = target
-    ? `${source.title?.trim() || "Task"} (continued on ${target.label})`
-    : `${source.title?.trim() || "Codex task"} (continued)`;
+    ? `${source.title?.trim() || "작업"} (${target.label}에서 이어서)`
+    : `${source.title?.trim() || "Codex 작업"} (이어서)`;
   // Modes and thinking options are provider-specific: only carry them over within one provider.
   const config = target
     ? { provider: `${provider}/${model}`, modeId: target.modeId }

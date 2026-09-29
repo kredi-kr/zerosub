@@ -174,7 +174,7 @@ function buttonFor(
   const items: PluginButtonMenuEntry[] = accounts.map((account, index) => ({
     kind: "item",
     id: `account-${index}`,
-    title: account.id === current.id || movable ? menuTitle(account) : `Continue on ${account.label} (new agent)`,
+    title: account.id === current.id || movable ? menuTitle(account) : `${account.label}에서 이어가기 (새 에이전트)`,
     icon: account.id === current.id ? "CircleCheck" : movable ? "Circle" : "CopyPlus",
     disabled: account.status === "signed_out" || account.status === "disabled" || account.id === current.id,
     behavior: { kind: "action", onPress: choose(account.id) },
@@ -185,7 +185,7 @@ function buttonFor(
     const entry: PluginButtonMenuEntry = {
       kind: "item",
       id: "use-reset",
-      title: `Use a banked reset on ${current.label} (${resets.available} left)…`,
+      title: `${current.label}에 한도 초기화권 사용 (${resets.available}개 남음)…`,
       icon: "TimerReset",
       behavior: { kind: "popover", Content: resetPopover(store, current, agent.id) },
     };
@@ -196,7 +196,7 @@ function buttonFor(
     wayOut.push({
       kind: "item",
       id: "fork-other",
-      title: `Continue on ${FAMILY_LABEL[other]} (new agent)…`,
+      title: `${FAMILY_LABEL[other]}에서 이어가기 (새 에이전트)…`,
       icon: "GitFork",
       behavior: { kind: "popover", Content: forkPopover(store, agent.id, family, other) },
     });
@@ -208,7 +208,7 @@ function buttonFor(
     items.push({
       kind: "item",
       id: "follow-default",
-      title: fallback ? `Follow default (${fallback.label})` : "Follow default",
+      title: fallback ? `기본 계정 따르기 (${fallback.label})` : "기본 계정 따르기",
       icon: "Undo2",
       behavior: { kind: "action", onPress: choose(null) },
     });
@@ -216,7 +216,7 @@ function buttonFor(
   items.push({
     kind: "item",
     id: "manage",
-    title: "Manage accounts…",
+    title: "계정 관리…",
     icon: "Users",
     behavior: {
       kind: "action",
@@ -226,9 +226,9 @@ function buttonFor(
     },
   });
 
-  const pending = route?.pendingAccountId ? " (after this turn)" : "";
+  const pending = route?.pendingAccountId ? " (이번 작업 후)" : "";
   return {
-    title: `Account: ${current.label}${current.email && current.email !== current.label ? ` (${current.email})` : ""}`,
+    title: `계정: ${current.label}${current.email && current.email !== current.label ? ` (${current.email})` : ""}`,
     icon: current.status === "limited" ? "CircleAlert" : "CircleUserRound",
     label: `${shortLabel(current)}${pending}`,
     behavior: { kind: "menu", items },
@@ -236,11 +236,11 @@ function buttonFor(
 }
 
 function menuTitle(account: AccountView): string {
-  if (account.status === "signed_out") return `${account.label} — signed out`;
-  if (account.status === "disabled") return `${account.label} — disabled`;
-  if (account.status === "limited") return `${account.label} — limit reached`;
+  if (account.status === "signed_out") return `${account.label} — 로그아웃됨`;
+  if (account.status === "disabled") return `${account.label} — 사용 중지됨`;
+  if (account.status === "limited") return `${account.label} — 한도 도달`;
   const peak = account.usage ? peakUsage(account.usage.windows) : null;
-  return peak ? `${account.label} — ${formatPercent(peak.usedPercent)} used` : account.label;
+  return peak ? `${account.label} — ${formatPercent(peak.usedPercent)} 사용` : account.label;
 }
 
 function menuKey(button: PluginButton): string {

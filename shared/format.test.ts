@@ -6,11 +6,11 @@ const NOW = Date.parse("2026-09-23T12:00:00Z");
 
 describe("formatResetIn", () => {
   it("renders compact relative times", () => {
-    expect(formatResetIn("2026-09-23T12:45:00Z", NOW)).toBe("in 45m");
-    expect(formatResetIn("2026-09-23T14:00:00Z", NOW)).toBe("in 2h");
-    expect(formatResetIn("2026-09-23T14:10:00Z", NOW)).toBe("in 2h 10m");
-    expect(formatResetIn("2026-09-26T15:00:00Z", NOW)).toBe("in 3d 3h");
-    expect(formatResetIn("2026-09-23T11:00:00Z", NOW)).toBe("now");
+    expect(formatResetIn("2026-09-23T12:45:00Z", NOW)).toBe("45분 후");
+    expect(formatResetIn("2026-09-23T14:00:00Z", NOW)).toBe("2시간 후");
+    expect(formatResetIn("2026-09-23T14:10:00Z", NOW)).toBe("2시간 10분 후");
+    expect(formatResetIn("2026-09-26T15:00:00Z", NOW)).toBe("3일 3시간 후");
+    expect(formatResetIn("2026-09-23T11:00:00Z", NOW)).toBe("지금");
     expect(formatResetIn(null, NOW)).toBeNull();
     expect(formatResetIn("not a date", NOW)).toBeNull();
   });
@@ -33,11 +33,11 @@ describe("accountSubtitle", () => {
 
 describe("formatAge", () => {
   it("reads naturally", () => {
-    expect(formatAge("2026-09-23T11:59:30Z", NOW)).toBe("just now");
-    expect(formatAge("2026-09-23T11:54:00Z", NOW)).toBe("6m ago");
-    expect(formatAge("2026-09-23T09:00:00Z", NOW)).toBe("3h ago");
-    expect(formatAge("2026-09-21T12:00:00Z", NOW)).toBe("2d ago");
-    expect(formatAge("garbage", NOW)).toBe("just now");
+    expect(formatAge("2026-09-23T11:59:30Z", NOW)).toBe("방금");
+    expect(formatAge("2026-09-23T11:54:00Z", NOW)).toBe("6분 전");
+    expect(formatAge("2026-09-23T09:00:00Z", NOW)).toBe("3시간 전");
+    expect(formatAge("2026-09-21T12:00:00Z", NOW)).toBe("2일 전");
+    expect(formatAge("garbage", NOW)).toBe("방금");
   });
 });
 
@@ -56,8 +56,8 @@ describe("account presentation", () => {
     usage: {
       fetchedAt: "2026-09-23T11:59:00Z",
       windows: [
-        { id: "five_hour", label: "5-hour", usedPercent: 30, resetsAt: "2026-09-23T14:00:00Z" },
-        { id: "seven_day", label: "Weekly", usedPercent: 71.6, resetsAt: "2026-09-25T12:00:00Z" },
+        { id: "five_hour", label: "5시간", usedPercent: 30, resetsAt: "2026-09-23T14:00:00Z" },
+        { id: "seven_day", label: "주간", usedPercent: 71.6, resetsAt: "2026-09-25T12:00:00Z" },
       ],
       error: null,
       cached: false,
@@ -69,12 +69,12 @@ describe("account presentation", () => {
 
   it("summarises the busiest window", () => {
     expect(peakUsage(account.usage?.windows ?? [])?.id).toBe("seven_day");
-    expect(usageSummary(account, NOW)).toBe("72% of weekly used · resets in 2d");
+    expect(usageSummary(account, NOW)).toBe("주간 72% 사용 · 2일 후 초기화");
   });
 
   it("puts a reached limit first", () => {
     expect(usageSummary({ ...account, status: "limited", limitedUntil: "2026-09-23T13:30:00Z" }, NOW)).toBe(
-      "Limit reached · resets in 1h 30m",
+      "한도 도달 · 1시간 30분 후 초기화",
     );
   });
 

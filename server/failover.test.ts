@@ -177,7 +177,7 @@ describe("failover", () => {
     for (let turn = 0; turn < 5; turn += 1) await limitTurn();
     expect(reopened).toHaveLength(4);
     expect(notes.at(-1)).toMatchObject({ outcome: "stayed" });
-    expect(notes.at(-1)?.detail).toMatch(/stopped switching it for now/);
+    expect(notes.at(-1)?.detail).toMatch(/당분간 자동 전환을 멈췄습니다/);
   });
 
   it("doesn't blame the new account for the old one's limit when a message fails before its turn starts", async () => {
@@ -343,7 +343,7 @@ describe("forking to the other provider", () => {
     expect(created).toHaveLength(1);
     const fork = created[0];
     expect(fork?.config).toEqual({ provider: "codex/gpt-5.6-sol", modeId: "full-access" });
-    expect(fork?.title).toBe("Fix the build (continued on ChatGPT)");
+    expect(fork?.title).toBe("Fix the build (ChatGPT에서 이어서)");
     expect(fork?.labels).toEqual({ "zerosub.continued-from": AGENT });
     expect(fork?.prompt).toMatch(/earlier Claude Code session that stopped because every Claude account reached its usage limit/);
     expect((await store.read()).bindings[fork?.agentId ?? ""]).toMatchObject({ accountId: CODEX_MAIN, source: "thread" });
@@ -363,7 +363,7 @@ describe("forking to the other provider", () => {
     await limitTurn();
     expect(created).toHaveLength(0);
     expect(notes.at(-1)).toMatchObject({ outcome: "stayed" });
-    expect(notes.at(-1)?.detail).toMatch(/no mode as careful as this agent's \(“Always Ask”\)/);
+    expect(notes.at(-1)?.detail).toMatch(/이 에이전트의 모드 \(“Always Ask”\)만큼 신중한 모드가 없어서/);
   });
 });
 
@@ -386,7 +386,7 @@ describe("disabling an account", () => {
     expect(state.sessions[AGENT]?.accountId).toBe(MAIN);
     expect(state.bindings[AGENT]?.accountId).toBe(HELLO); // kept for when it's enabled again
 
-    await expect(service.setAccountEnabled(paseo, MAIN, false)).rejects.toThrow(/only Claude account in use/);
+    await expect(service.setAccountEnabled(paseo, MAIN, false)).rejects.toThrow(/유일한 Claude 계정입니다/);
 
     const on = await service.setAccountEnabled(paseo, HELLO, true);
     expect(on.reopened).toEqual([AGENT]);

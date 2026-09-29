@@ -25,7 +25,7 @@ In the app, open **Settings → Plugins**, paste `npm:@kapybara/zerosub` as the 
 ```bash
 paseo plugin install npm:@kapybara/zerosub
 # or straight from GitHub:
-paseo plugin install github:kapybara-org/zerosub
+paseo plugin install github:kredi-kr/zerosub
 ```
 
 Then open **Accounts (ZeroSub)** in the sidebar.
@@ -124,7 +124,7 @@ ZeroSub never implements OAuth itself and never copies credentials between accou
 ## Development
 
 ```bash
-git clone https://github.com/kapybara-org/zerosub.git
+git clone https://github.com/kredi-kr/zerosub.git
 cd zerosub
 npm install
 paseo plugin install "$(pwd)"   # run the working copy
@@ -142,7 +142,7 @@ Code layout:
 - `server/`: routing, account homes, Claude and Codex adapters, failover.
 - `shared/`: RPC contracts and the view model.
 
-Report problems at [github.com/kapybara-org/ZeroSub/issues](https://github.com/kapybara-org/ZeroSub/issues).
+Report problems at [github.com/kredi-kr/zerosub/issues](https://github.com/kredi-kr/zerosub/issues).
 
 ## Uninstall
 

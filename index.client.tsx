@@ -12,10 +12,10 @@ export default function contribute(client: PluginClientContext) {
   store.start();
 
   client.addSurface("accounts", (props) => <AccountsSurface {...props} store={store} />);
-  client.addSidebarItem({ id: "accounts", title: "Accounts (ZeroSub)", icon: "Users", surface: "accounts" });
+  client.addSidebarItem({ id: "accounts", title: "계정 (ZeroSub)", icon: "Users", surface: "accounts" });
   client.addSettingsScreen({
     id: "preferences",
-    title: "ZeroSub preferences",
+    title: "ZeroSub 환경설정",
     icon: "SlidersHorizontal",
     Component: (props) => (
       <PreferencesScreen {...props} onOpenAccounts={() => client.openSurface("accounts")} />

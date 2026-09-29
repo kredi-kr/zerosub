@@ -25,7 +25,7 @@ export function forkPopover(store: ZeroSubStore, agentId: string, from: Family, 
       try {
         const fork = await store.rpc(forkAgent, { agentId });
         close();
-        toast.show(`Continuing on ${FAMILY_LABEL[to]} in “${fork.title}”`, { variant: "success", durationMs: 5_000 });
+        toast.show(`${FAMILY_LABEL[to]}의 “${fork.title}”에서 이어갑니다`, { variant: "success", durationMs: 5_000 });
       } catch (failure) {
         setError(describe(failure));
         setBusy(false);
@@ -34,20 +34,20 @@ export function forkPopover(store: ZeroSubStore, agentId: string, from: Family, 
 
     return (
       <View style={{ gap: 12, maxWidth: 360 }}>
-        <Text style={text.heading}>Continue on {FAMILY_LABEL[to]}?</Text>
+        <Text style={text.heading}>{FAMILY_LABEL[to]}에서 이어갈까요?</Text>
         <Text style={text.body}>
-          Every {FAMILY_LABEL[from]} account is at its limit. This starts a new {FAMILY_LABEL[to]} agent in this workspace
-          with the conversation so far, allowed no more than this agent is. This agent stays as it is.
+          모든 {FAMILY_LABEL[from]} 계정이 한도에 닿았습니다. 이 작업 공간에 지금까지의 대화를 담은 새 {FAMILY_LABEL[to]} 에이전트를
+          시작합니다. 새 에이전트는 이 에이전트보다 더 많은 권한을 받지 않으며, 이 에이전트는 그대로 남습니다.
         </Text>
         {error ? <Text style={text.danger}>{error}</Text> : null}
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
-          <Button theme={theme} label="Not now" tooltip="Close without starting a new agent" tooltipAlign="end" onPress={close} disabled={busy} />
+          <Button theme={theme} label="나중에" tooltip="새 에이전트를 시작하지 않고 닫습니다" tooltipAlign="end" onPress={close} disabled={busy} />
           <Button
             theme={theme}
             tone="primary"
             icon="GitFork"
-            label={`Continue on ${FAMILY_LABEL[to]}`}
-            tooltip={`Start a new ${FAMILY_LABEL[to]} agent with this conversation so far`}
+            label={`${FAMILY_LABEL[to]}에서 이어가기`}
+            tooltip={`지금까지의 대화로 새 ${FAMILY_LABEL[to]} 에이전트를 시작합니다`}
             tooltipAlign="end"
             busy={busy}
             onPress={() => void start()}

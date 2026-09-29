@@ -7,20 +7,20 @@ import type { SwitchRow } from "../shared/timeline";
 
 function cause(row: SwitchRow): string | null {
   const reset = formatResetIn(row.resetsAt);
-  const from = row.from ?? "The previous account";
+  const from = row.from ?? "이전 계정";
   switch (row.reason) {
     case "limit":
-      return `${from} hit its usage limit${reset ? ` (resets ${reset})` : ""}.`;
+      return `${from} 계정이 사용 한도에 닿았습니다${reset ? ` (${reset} 초기화)` : ""}.`;
     case "signed_out":
-      return `${from} is signed out — sign it in again from Accounts.`;
+      return `${from} 계정이 로그아웃되었습니다. 계정 화면에서 다시 로그인하세요.`;
     case "removed":
-      return `${from} was removed.`;
+      return `${from} 계정이 삭제되었습니다.`;
     case "disabled":
-      return `${from} was disabled for now.`;
+      return `${from} 계정의 사용이 잠시 중지되었습니다.`;
     case "enabled":
-      return `${row.to} is enabled again.`;
+      return `${row.to} 계정을 다시 사용합니다.`;
     case "default":
-      return "The default account changed.";
+      return "기본 계정이 바뀌었습니다.";
     default:
       return null;
   }
@@ -36,19 +36,19 @@ export function describeRow(row: SwitchRow): string {
     const reset = formatResetIn(row.resetsAt);
     const lead =
       row.reason === "exhausted"
-        ? `Every ${FAMILY_LABEL[row.family]} account is at its limit${reset ? ` (${row.from ?? "this one"} resets ${reset})` : ""}, so the work`
-        : "The work";
-    return `${lead} continues on ${FAMILY_LABEL[row.toFamily]} in a new agent: “${row.continuedIn.title}” (${row.to}).`;
+        ? `모든 ${FAMILY_LABEL[row.family]} 계정이 한도에 닿아${reset ? ` (${row.from ?? "이 계정"}은 ${reset} 초기화)` : ""} `
+        : "";
+    return `${lead}${FAMILY_LABEL[row.toFamily]}의 새 에이전트에서 작업을 이어갑니다: “${row.continuedIn.title}” (${row.to}).`;
   }
   if (row.reason === "exhausted") {
     const reset = formatResetIn(row.resetsAt);
-    return `Every ${FAMILY_LABEL[row.family]} account is at its limit${
-      reset ? `; ${row.from ?? "this one"} resets ${reset}` : ""
-    }. Add another account, use a banked reset from the account button, or wait.${row.detail ? ` ${row.detail}` : ""}`;
+    return `모든 ${FAMILY_LABEL[row.family]} 계정이 한도에 닿았습니다${
+      reset ? `. ${row.from ?? "이 계정"}은 ${reset} 초기화됩니다` : ""
+    }. 계정을 더 추가하거나, 계정 버튼에서 한도 초기화권을 쓰거나, 초기화될 때까지 기다리세요.${row.detail ? ` ${row.detail}` : ""}`;
   }
   if (row.outcome === "reset") {
-    return `${row.from ?? "This account"} hit its usage limit, so a banked reset was used. ${row.detail ?? "Limits reset."}${
-      row.continued ? " Carrying on." : ""
+    return `${row.from ?? "이 계정"} 계정이 사용 한도에 닿아 한도 초기화권을 썼습니다. ${row.detail ?? "한도가 초기화되었습니다."}${
+      row.continued ? " 하던 일을 이어갑니다." : ""
     }`;
   }
   const why = cause(row);
@@ -56,16 +56,16 @@ export function describeRow(row: SwitchRow): string {
   switch (row.outcome) {
     case "continued":
       return row.continuedIn
-        ? `${lead}ChatGPT conversations can't change accounts, so this one continues in a new agent: “${row.continuedIn.title}” on ${row.to}.`
-        : `${lead}Continuing on ${row.to}.`;
+        ? `${lead}ChatGPT 대화는 도중에 계정을 바꿀 수 없어, ${row.to} 계정의 새 에이전트에서 이어갑니다: “${row.continuedIn.title}”.`
+        : `${lead}${row.to} 계정에서 이어갑니다.`;
     case "stayed":
-      return `${lead}This conversation stays on ${row.from ?? "its account"}.${row.detail ? ` ${row.detail}` : ""}`;
+      return `${lead}이 대화는 ${row.from ?? "원래 계정"}에 그대로 남습니다.${row.detail ? ` ${row.detail}` : ""}`;
     case "pending":
-      return `${lead}Moves to ${row.to} when its session next starts.`;
+      return `${lead}다음에 세션이 시작될 때 ${row.to} 계정으로 옮깁니다.`;
     default: {
       const from =
-        row.from && row.reason !== "limit" && row.reason !== "signed_out" && row.reason !== "disabled" ? `from ${row.from} ` : "";
-      return `${lead}Switched ${from}to ${row.to}${row.continued ? " and carried on" : ""}.`;
+        row.from && row.reason !== "limit" && row.reason !== "signed_out" && row.reason !== "disabled" ? `${row.from}에서 ` : "";
+      return `${lead}${from}${row.to} 계정으로 바꿨습니다${row.continued ? ". 하던 일을 이어갑니다" : ""}.`;
     }
   }
 }

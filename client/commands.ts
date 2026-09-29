@@ -10,9 +10,9 @@ export function contributeCommands(client: PluginClientContext, store: ZeroSubSt
   removers.push(
     client.addCommandCenterItem({
       id: "open-accounts",
-      title: "Manage subscription accounts (ZeroSub)",
+      title: "구독 계정 관리 (ZeroSub)",
       icon: "Users",
-      keywords: ["zerosub", "claude", "chatgpt", "codex", "account", "subscription", "login", "switch"],
+      keywords: ["zerosub", "claude", "chatgpt", "codex", "account", "subscription", "login", "switch", "계정", "구독", "로그인", "전환"],
       context: "global",
       onSelect({ openSurface }) {
         openSurface("accounts");
@@ -23,13 +23,13 @@ export function contributeCommands(client: PluginClientContext, store: ZeroSubSt
   removers.push(
     client.addSlashCommand({
       name: "account",
-      description: "Switch the subscription account this agent uses",
-      argumentHint: "[name | default]",
+      description: "이 에이전트가 쓰는 구독 계정을 바꿉니다",
+      argumentHint: "[이름 | default]",
       context: "agent",
       async onSubmit({ args, agent, openSurface }) {
         const state = await currentState(store);
         const family = state.providers[agent.provider];
-        if (!family) throw new Error(`${agent.provider} agents don't use Claude or ChatGPT subscription accounts.`);
+        if (!family) throw new Error(`${agent.provider} 에이전트는 Claude나 ChatGPT 구독 계정을 쓰지 않습니다.`);
         const query = args.trim();
         if (!query) {
           openSurface("accounts");
@@ -43,10 +43,10 @@ export function contributeCommands(client: PluginClientContext, store: ZeroSubSt
         const match = findAccount(accounts, query);
         if (!match) {
           const names = accounts.map((account) => account.label).join(", ");
-          throw new Error(`No ${FAMILY_LABEL[family]} account matches "${query}". Accounts: ${names || "none"}.`);
+          throw new Error(`"${query}"와 맞는 ${FAMILY_LABEL[family]} 계정이 없습니다. 계정 목록: ${names || "없음"}.`);
         }
-        if (match.status === "signed_out") throw new Error(`${match.label} is signed out. Sign it in from Accounts first.`);
-        if (match.status === "disabled") throw new Error(`${match.label} is disabled. Enable it in Accounts first.`);
+        if (match.status === "signed_out") throw new Error(`${match.label} 계정은 로그아웃되어 있습니다. 계정 화면에서 먼저 로그인하세요.`);
+        if (match.status === "disabled") throw new Error(`${match.label} 계정은 사용 중지되어 있습니다. 계정 화면에서 먼저 다시 사용으로 바꾸세요.`);
         await store.rpc(setAgentAccount, { agentId: agent.id, accountId: match.id });
       },
     }),
@@ -68,9 +68,9 @@ export function contributeCommands(client: PluginClientContext, store: ZeroSubSt
       dynamic.push(
         client.addCommandCenterItem({
           id: `default-${index}`,
-          title: `Make ${account.label} the default ${FAMILY_LABEL[account.family]} account`,
+          title: `${account.label}을(를) 기본 ${FAMILY_LABEL[account.family]} 계정으로 지정`,
           icon: "Star",
-          keywords: ["account", "default", "switch", account.email ?? "", account.family],
+          keywords: ["account", "default", "switch", "계정", "기본", account.email ?? "", account.family],
           context: "global",
           async onSelect() {
             await store.rpc(setDefaultAccount, { accountId: account.id });
@@ -92,7 +92,7 @@ export function contributeCommands(client: PluginClientContext, store: ZeroSubSt
 async function currentState(store: ZeroSubStore): Promise<StateView> {
   if (!store.current.state) await store.refresh();
   const state = store.current.state;
-  if (!state) throw new Error(store.current.error ?? "Accounts are not available yet.");
+  if (!state) throw new Error(store.current.error ?? "아직 계정 정보를 불러오지 못했습니다.");
   return state;
 }
 

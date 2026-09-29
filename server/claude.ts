@@ -38,11 +38,11 @@ function isFresh(credentials: Credentials | null): credentials is Credentials {
 }
 
 function statusFailure(status: number): RedeemReply {
-  if (status === 429) return { outcome: "error", message: "Too many attempts. Wait a minute and try again.", left: null };
+  if (status === 429) return { outcome: "error", message: "요청이 너무 많습니다. 1분 뒤 다시 시도하세요.", left: null };
   if (status === 401 || status === 403) {
-    return { outcome: "error", message: "Claude rejected this account's sign-in. Sign it in again, then retry.", left: null };
+    return { outcome: "error", message: "Claude가 이 계정의 로그인을 거부했습니다. 다시 로그인한 뒤 시도하세요.", left: null };
   }
-  return { outcome: "error", message: `Claude answered with HTTP ${status}. Try again later.`, left: null };
+  return { outcome: "error", message: `Claude가 HTTP ${status} 오류로 응답했습니다. 잠시 뒤 다시 시도하세요.`, left: null };
 }
 
 function describe(error: unknown): string {
@@ -73,7 +73,7 @@ export class ClaudeAdapter implements FamilyAdapter {
     const { command, prefix } = await providerCommand("claude");
     const result = await run(command, [...prefix, "--version"], { timeoutMs: 30_000 });
     if (result.code === 0) return { ok: true, detail: null };
-    return { ok: false, detail: (result.stderr || result.stdout).trim().split("\n")[0] || `${command} not found` };
+    return { ok: false, detail: (result.stderr || result.stdout).trim().split("\n")[0] || `${command} 명령을 찾을 수 없습니다.` };
   }
 
   prepareHome(home: string): Promise<void> {
@@ -87,7 +87,7 @@ export class ClaudeAdapter implements FamilyAdapter {
       timeoutMs: 30_000,
     });
     const status = parseJsonObject(result.stdout);
-    if (!status) throw new Error(result.stderr.trim() || "Could not read Claude sign-in status");
+    if (!status) throw new Error(result.stderr.trim() || "Claude 로그인 상태를 읽지 못했습니다.");
     const signedIn = status.loggedIn === true;
     const email = str(status.email);
     const orgId = str(status.orgId);
@@ -126,7 +126,7 @@ export class ClaudeAdapter implements FamilyAdapter {
           return { ...(cached ?? { fetchedAt, windows: [], error: null, cached: false, resets: null }), retryAt };
         }
         if (response.status !== 401 && response.status !== 403) {
-          return { fetchedAt, windows: [], error: `Usage request failed (HTTP ${response.status})`, cached: false, resets: null };
+          return { fetchedAt, windows: [], error: `사용량을 불러오지 못했습니다 (HTTP ${response.status})`, cached: false, resets: null };
         }
       } catch (error) {
         return { fetchedAt, windows: [], error: error instanceof Error ? error.message : String(error), cached: false, resets: null };
@@ -136,7 +136,7 @@ export class ClaudeAdapter implements FamilyAdapter {
     // show the last utilisation Claude Code itself cached for this account.
     const cached = await cachedUsage(home);
     if (cached) return cached;
-    return { fetchedAt, windows: [], error: "Usage shows up after this account is next used.", cached: false, resets: null };
+    return { fetchedAt, windows: [], error: "이 계정을 다음에 사용하면 사용량이 표시됩니다.", cached: false, resets: null };
   }
 
   /** Logs (only when it changes) why an account does or doesn't show a banked reset. */
@@ -176,7 +176,7 @@ export class ClaudeAdapter implements FamilyAdapter {
     if (!isFresh(credentials)) credentials = await this.renewLogin(home);
     const token = credentials?.accessToken;
     if (!token || !isFresh(credentials)) {
-      return { outcome: "error", message: "Couldn't use this account's sign-in. Sign it in again, then retry.", left: null };
+      return { outcome: "error", message: "이 계정의 로그인 정보를 쓸 수 없습니다. 다시 로그인한 뒤 시도하세요.", left: null };
     }
 
     // Ask which grant is next: the server only accepts that one.
@@ -189,23 +189,23 @@ export class ClaudeAdapter implements FamilyAdapter {
       if (!response.ok) return statusFailure(response.status);
       status = parseClaudeResets(((await response.json()) as { cedar_ember?: unknown }).cedar_ember);
     } catch (error) {
-      return { outcome: "error", message: `Couldn't check the account's resets: ${describe(error)}`, left: null };
+      return { outcome: "error", message: `이 계정의 한도 초기화권을 확인하지 못했습니다: ${describe(error)}`, left: null };
     }
-    if (!status.offer || !status.nextGrantId) return { outcome: "none", message: "No banked resets left on this account.", left: 0 };
+    if (!status.offer || !status.nextGrantId) return { outcome: "none", message: "이 계정에 남은 한도 초기화권이 없습니다.", left: 0 };
     if (options.onlyAtLimit && !status.atLimit) {
       // Something refilled the account since the limit hit, e.g. another host sharing it spent a reset.
-      return { outcome: "not_limited", message: "Claude says this account has room again, so the reset was kept.", left: status.offer.available };
+      return { outcome: "not_limited", message: "Claude에 따르면 이 계정은 다시 쓸 수 있는 상태라 한도 초기화권을 쓰지 않고 남겨 두었습니다.", left: status.offer.available };
     }
     if (!status.offer.usableNow) {
       return {
         outcome: "unavailable",
-        message: status.offer.blockedReason ?? "The reset can't be used right now.",
+        message: status.offer.blockedReason ?? "지금은 한도 초기화권을 쓸 수 없습니다.",
         left: status.offer.available,
       };
     }
 
     const organization = await this.organizationId(home);
-    if (!organization) return { outcome: "error", message: "Couldn't tell which Claude organization this account belongs to.", left: null };
+    if (!organization) return { outcome: "error", message: "이 계정이 어느 Claude 조직에 속하는지 알 수 없습니다.", left: null };
     try {
       const response = await fetch(`${API}/api/organizations/${organization}/reset_rate_limits`, {
         method: "POST",
@@ -218,7 +218,7 @@ export class ClaudeAdapter implements FamilyAdapter {
     } catch (error) {
       return {
         outcome: "error",
-        message: `The reset request didn't finish (${describe(error)}), so it may or may not have gone through. Refresh usage before trying again.`,
+        message: `한도 초기화 요청이 끝나지 않았습니다 (${describe(error)}). 적용되었는지 알 수 없으니, 다시 시도하기 전에 사용량을 새로 고치세요.`,
         left: null,
       };
     }
@@ -279,12 +279,12 @@ class ClaudeLogin extends ProgressEmitter implements LoginHandle {
     this.finished = new Promise((resolve) => {
       this.child.on("error", (error) => {
         this.stop();
-        resolve({ ok: false, message: `Could not start Claude Code: ${error.message}` });
+        resolve({ ok: false, message: `Claude Code를 시작하지 못했습니다: ${error.message}` });
       });
       this.child.on("close", (code) => {
         this.exited = true;
         this.stop();
-        if (this.canceled) return resolve({ ok: false, message: "Sign-in was canceled." });
+        if (this.canceled) return resolve({ ok: false, message: "로그인이 취소되었습니다." });
         if (code === 0) return resolve({ ok: true, message: null });
         const failure = this.stderr
           .split("\n")
@@ -304,7 +304,7 @@ class ClaudeLogin extends ProgressEmitter implements LoginHandle {
       const text = stripAnsi(chunk.toString("utf8"));
       this.stderr += text;
       if (/invalid code/i.test(text)) {
-        this.update({ message: "That code didn't work. Copy the whole code from the page and paste it again." });
+        this.update({ message: "코드가 맞지 않습니다. 페이지에 있는 코드 전체를 복사해서 다시 붙여 넣으세요." });
       }
     });
     if (capture) {
@@ -323,11 +323,11 @@ class ClaudeLogin extends ProgressEmitter implements LoginHandle {
 
   async submitCode(code: string): Promise<void> {
     let value = code.trim().replace(/\s+/g, "");
-    if (!value) throw new Error("Paste the code from the sign-in page.");
+    if (!value) throw new Error("로그인 페이지에 나온 코드를 붙여 넣으세요.");
     // The CLI only checks that a `#state` suffix is present; the exchange uses the flow's own state.
     if (!value.includes("#")) value = `${value}#zerosub`;
-    if (this.exited) throw new Error("This sign-in has ended. Start again.");
-    this.update({ message: "Checking the code…" });
+    if (this.exited) throw new Error("이 로그인은 이미 끝났습니다. 처음부터 다시 시작하세요.");
+    this.update({ message: "코드를 확인하는 중…" });
     this.child.stdin.write(`${value}\n`);
   }
 
@@ -343,9 +343,9 @@ class ClaudeLogin extends ProgressEmitter implements LoginHandle {
 }
 
 function friendlyFailure(message: string): string {
-  if (!message) return "Sign-in did not finish.";
-  if (/status code 400/i.test(message)) return "That code was rejected. Start again and paste the newest code.";
-  return message.replace(/^Login failed:\s*/i, "Sign-in failed: ");
+  if (!message) return "로그인이 끝나지 않았습니다.";
+  if (/status code 400/i.test(message)) return "코드가 거부되었습니다. 처음부터 다시 시작해서 가장 최근 코드를 붙여 넣으세요.";
+  return message.replace(/^Login failed:\s*/i, "로그인 실패: ");
 }
 
 // --------------------------------------------------------------------------- credentials (read-only)
@@ -422,10 +422,10 @@ async function cachedUsage(home: string | null): Promise<Usage | null> {
 }
 
 const WINDOW_LABELS: Array<[key: string, label: string]> = [
-  ["five_hour", "5-hour"],
-  ["seven_day", "Weekly"],
-  ["seven_day_opus", "Weekly · Opus"],
-  ["seven_day_sonnet", "Weekly · Sonnet"],
+  ["five_hour", "5시간"],
+  ["seven_day", "주간"],
+  ["seven_day_opus", "주간 · Opus"],
+  ["seven_day_sonnet", "주간 · Sonnet"],
 ];
 
 export function parseUsage(body: unknown): UsageWindow[] {
@@ -443,10 +443,10 @@ export function parseUsage(body: unknown): UsageWindow[] {
       if (limit?.kind !== "weekly_scoped" || typeof limit.percent !== "number") continue;
       const scope = limit.scope as { model?: { display_name?: unknown }; surface?: { display_name?: unknown } } | undefined;
       const name = str(scope?.model?.display_name) ?? str(scope?.surface?.display_name);
-      if (!name || windows.some((window) => window.label === `Weekly · ${name}`)) continue;
+      if (!name || windows.some((window) => window.label === `주간 · ${name}`)) continue;
       windows.push({
         id: `weekly_${name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`,
-        label: `Weekly · ${name}`,
+        label: `주간 · ${name}`,
         usedPercent: limit.percent,
         resetsAt: isoDate(limit.resets_at),
       });

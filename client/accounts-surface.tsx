@@ -59,14 +59,14 @@ export function AccountsSurface(props: PluginSurfaceProps & { store: ZeroSubStor
           <Text style={[text.small, { fontWeight: "600", letterSpacing: 0.4 }]}>ZeroSub</Text>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <Text style={text.title} accessibilityRole="header">
-              Subscription accounts
+              구독 계정
             </Text>
             {state ? (
               <IconButton
                 theme={theme}
                 icon="RefreshCw"
-                label="Refresh usage"
-                tooltip="Refresh usage for every account now"
+                label="사용량 새로고침"
+                tooltip="모든 계정의 사용량을 지금 새로 불러옵니다"
                 tooltipPlacement="bottom"
                 busy={refreshing}
                 onPress={() => void refreshUsage()}
@@ -74,8 +74,8 @@ export function AccountsSurface(props: PluginSurfaceProps & { store: ZeroSubStor
             ) : null}
           </View>
           <Text style={text.muted}>
-            Keep several Claude and ChatGPT accounts signed in. Each agent uses one; when an account
-            hits its limit, agents move to another and keep going.
+            여러 Claude·ChatGPT 계정에 로그인해 두세요. 에이전트마다 계정 하나를 쓰고, 그 계정이
+            사용 한도에 닿으면 다른 계정으로 옮겨 하던 일을 이어갑니다.
           </Text>
         </View>
 
@@ -85,16 +85,16 @@ export function AccountsSurface(props: PluginSurfaceProps & { store: ZeroSubStor
           <Card theme={theme}>
             <Text style={text.danger}>
               {offline
-                ? `Can't reach ${host.label}. Its accounts are saved on that machine${
-                    state ? "; this is how they looked last." : " and show up here once it reconnects."
+                ? `${host.label}에 연결할 수 없습니다. 계정은 그 컴퓨터에 저장되어 있${
+                    state ? "으며, 아래는 마지막으로 확인한 모습입니다." : "고, 다시 연결되면 여기에 나타납니다."
                   }`
-                : `Could not reach the daemon: ${error}`}
+                : `Paseo 데몬에 연결할 수 없습니다: ${error}`}
             </Text>
             <Button
               theme={theme}
-              label="Try again"
+              label="다시 시도"
               icon="RefreshCw"
-              tooltip="Ask this host for its accounts again"
+              tooltip="이 호스트에 계정 목록을 다시 요청합니다"
               tooltipAlign="start"
               onPress={() => void store.refresh()}
             />
@@ -107,7 +107,7 @@ export function AccountsSurface(props: PluginSurfaceProps & { store: ZeroSubStor
           </Card>
         ))}
 
-        {!state && !error ? <Text style={text.muted}>Loading accounts…</Text> : null}
+        {!state && !error ? <Text style={text.muted}>계정을 불러오는 중…</Text> : null}
 
         {state
           ? families.map((family) => (
@@ -161,11 +161,11 @@ function HostScope({ theme, label }: { theme: Theme; label: string }) {
     >
       <Icon name="Server" size={16} color={theme.colors.foregroundMuted} />
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={text.strong}>Accounts on {label}</Text>
+        <Text style={text.strong}>{label}의 계정</Text>
         <Text style={text.small}>
-          Only agents on this host use them. Each host keeps its own accounts and settings, so sign in on
-          each host you use. Switch hosts with the host picker at the top; a host shows up there once ZeroSub
-          is installed on it.
+          이 호스트의 에이전트만 이 계정들을 씁니다. 호스트마다 계정과 설정을 따로 보관하므로, 쓰는 호스트마다
+          로그인하세요. 호스트는 맨 위의 호스트 선택기에서 바꿀 수 있고, ZeroSub가 설치된 호스트만 그곳에
+          나타납니다.
         </Text>
       </View>
     </View>
@@ -199,15 +199,15 @@ function FamilySection({
         <Button
           theme={theme}
           icon="Plus"
-          label={compact ? "Add" : "Add account"}
-          accessibilityLabel={`Add ${FAMILY_LABEL[family]} account`}
-          tooltip={`Sign in another ${FAMILY_LABEL[family]} account`}
+          label={compact ? "추가" : "계정 추가"}
+          accessibilityLabel={`${FAMILY_LABEL[family]} 계정 추가`}
+          tooltip={`${FAMILY_LABEL[family]} 계정을 하나 더 로그인합니다`}
           tooltipAlign="end"
           onPress={onAdd}
         />
       </View>
       {accounts.length === 0 ? (
-        <Text style={text.muted}>No {FAMILY_LABEL[family]} accounts yet.</Text>
+        <Text style={text.muted}>아직 {FAMILY_LABEL[family]} 계정이 없습니다.</Text>
       ) : null}
       {chunk(accounts, compact ? 1 : 2).map((row) => (
         <View key={row.map((account) => account.id).join()} style={{ flexDirection: "row", gap: 10 }}>
@@ -252,8 +252,8 @@ function AccountCard({
   const disabled = account.status === "disabled";
   const faded = disabled ? { opacity: 0.55 } : null;
   const windows = account.usage?.windows ?? [];
-  const agents = account.agentCount === 0 ? "No agents" : `${account.agentCount} agent${account.agentCount === 1 ? "" : "s"}`;
-  const freshness = !signedOut && account.usage && windows.length > 0 ? `updated ${formatAge(account.usage.fetchedAt)}` : null;
+  const agents = account.agentCount === 0 ? "에이전트 없음" : `에이전트 ${account.agentCount}개`;
+  const freshness = !signedOut && account.usage && windows.length > 0 ? `${formatAge(account.usage.fetchedAt)} 갱신` : null;
 
   // Sets the account aside for a while, or brings it back; its agents move off it and back.
   const toggle = useCallback(async () => {
@@ -261,10 +261,10 @@ function AccountCard({
     setBusy("toggle");
     try {
       const result = await store.rpc(setAccountEnabled, { accountId: account.id, enabled: enabling });
-      const message = describeReopen(`${account.label} is ${enabling ? "enabled" : "disabled"}`, result);
+      const message = describeReopen(`${account.label}: ${enabling ? "다시 사용합니다" : "사용을 멈췄습니다"}`, result);
       const stayed =
         result.stayed > 0
-          ? ` · ${result.stayed} ChatGPT conversation${result.stayed === 1 ? " stays" : "s stay"} on it (they can't change accounts)`
+          ? ` · ChatGPT 대화 ${result.stayed}개는 이 계정에 남습니다 (대화 도중 계정을 바꿀 수 없음)`
           : "";
       toast.show(`${message}${stayed}`, { variant: "success", durationMs: 5_000 });
     } catch (error) {
@@ -278,7 +278,7 @@ function AccountCard({
     setBusy("default");
     try {
       const summary = await store.rpc(setDefaultAccount, { accountId: account.id });
-      toast.show(describeReopen(`${account.label} is now the default`, summary), { variant: "success" });
+      toast.show(describeReopen(`${account.label}: 이제 기본 계정입니다`, summary), { variant: "success" });
       await store.refresh();
     } catch (error) {
       toast.error(describe(error));
@@ -292,7 +292,7 @@ function AccountCard({
     setBusy("clear");
     try {
       await store.rpc(clearAccountLimit, { accountId: account.id });
-      toast.show(`${account.label} is available again`, { variant: "success" });
+      toast.show(`${account.label}: 다시 사용할 수 있습니다`, { variant: "success" });
     } catch (error) {
       toast.error(describe(error));
     } finally {
@@ -306,8 +306,8 @@ function AccountCard({
       const result = await store.rpc(removeAccount, { accountId: account.id });
       toast.show(
         result.movedAgents > 0
-          ? `Removed ${account.label}; ${result.movedAgents} agent(s) moved to the default account`
-          : `Removed ${account.label}`,
+          ? `${account.label} 계정을 삭제했습니다. 에이전트 ${result.movedAgents}개는 기본 계정으로 옮겼습니다`
+          : `${account.label} 계정을 삭제했습니다`,
         { variant: "success" },
       );
       await store.refresh();
@@ -340,8 +340,8 @@ function AccountCard({
             <IconButton
               theme={theme}
               icon="CircleCheck"
-              label="Mark as available again (it has room)"
-              tooltip="Mark as available: use it again before its limit resets, e.g. after upgrading"
+              label="다시 사용 가능으로 표시 (여유 있음)"
+              tooltip="사용 가능으로 표시: 요금제를 올린 뒤처럼, 한도가 초기화되기 전에 다시 씁니다"
               busy={busy === "clear"}
               onPress={() => void markAvailable()}
             />
@@ -350,8 +350,8 @@ function AccountCard({
             <IconButton
               theme={theme}
               icon="Star"
-              label="Make default"
-              tooltip="Make default: new agents start on this account"
+              label="기본 계정으로 지정"
+              tooltip="기본 계정으로 지정: 새 에이전트가 이 계정으로 시작합니다"
               busy={busy === "default"}
               onPress={() => void makeDefault()}
             />
@@ -359,22 +359,22 @@ function AccountCard({
           <IconButton
             theme={theme}
             icon={disabled ? "CirclePlay" : "CirclePause"}
-            label={disabled ? "Enable account" : "Disable for now (agents won't use it)"}
+            label={disabled ? "계정 다시 사용" : "잠시 사용 중지 (에이전트가 쓰지 않음)"}
             tooltip={
               disabled
-                ? "Enable: agents can use this account again"
-                : "Disable for now: agents stop using it and move to your other accounts"
+                ? "다시 사용: 에이전트가 이 계정을 다시 쓸 수 있습니다"
+                : "잠시 사용 중지: 에이전트가 이 계정을 그만 쓰고 다른 계정으로 옮깁니다"
             }
             busy={busy === "toggle"}
             onPress={() => void toggle()}
           />
-          <IconButton theme={theme} icon="Pencil" label="Rename" tooltip="Rename this account" onPress={() => setRenaming(true)} />
+          <IconButton theme={theme} icon="Pencil" label="이름 바꾸기" tooltip="이 계정의 이름을 바꿉니다" onPress={() => setRenaming(true)} />
           {account.kind !== "main" ? (
             <IconButton
               theme={theme}
               icon="Trash2"
-              label="Remove"
-              tooltip="Remove: sign it out and delete its saved login"
+              label="삭제"
+              tooltip="삭제: 로그아웃하고 저장된 로그인 정보를 지웁니다"
               tone="danger"
               busy={busy === "remove"}
               onPress={() => setConfirmRemove(true)}
@@ -384,22 +384,22 @@ function AccountCard({
       </View>
 
       <View style={[{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 }, faded]}>
-        {account.isDefault ? <Badge theme={theme} label="Default" tone="accent" /> : null}
-        {disabled ? <Badge theme={theme} label="Disabled" /> : null}
+        {account.isDefault ? <Badge theme={theme} label="기본" tone="accent" /> : null}
+        {disabled ? <Badge theme={theme} label="사용 중지됨" /> : null}
         {plan ? <Badge theme={theme} label={plan} /> : null}
-        {account.kind === "main" ? <Badge theme={theme} label="CLI login" /> : null}
-        {account.status === "limited" ? <Badge theme={theme} label="Limit reached" tone="danger" /> : null}
-        {account.status === "signed_out" ? <Badge theme={theme} label="Signed out" tone="warning" /> : null}
+        {account.kind === "main" ? <Badge theme={theme} label="CLI 로그인" /> : null}
+        {account.status === "limited" ? <Badge theme={theme} label="한도 도달" tone="danger" /> : null}
+        {account.status === "signed_out" ? <Badge theme={theme} label="로그아웃됨" tone="warning" /> : null}
         {resets && !signedOut ? <Badge theme={theme} label={resetBadge(resets)} tone="accent" /> : null}
       </View>
 
       <View style={[{ gap: 10 }, faded]}>
         {signedOut ? (
-          <Text style={text.small}>Sign in again to use this account.</Text>
+          <Text style={text.small}>이 계정을 쓰려면 다시 로그인하세요.</Text>
         ) : windows.length > 0 ? (
           windows.map((limit) => <UsageBar key={limit.id} theme={theme} limit={limit} />)
         ) : (
-          <Text style={text.small}>{account.usage?.error ?? summary ?? "Checking usage…"}</Text>
+          <Text style={text.small}>{account.usage?.error ?? summary ?? "사용량 확인 중…"}</Text>
         )}
         {!signedOut && windows.length > 0 && account.usage?.error ? <Text style={text.small}>{account.usage.error}</Text> : null}
         {!signedOut && resets?.blockedReason ? <Text style={text.small}>{resets.blockedReason}</Text> : null}
@@ -422,7 +422,7 @@ function AccountCard({
         }}
       >
         <Text style={[text.small, { flexShrink: 1 }]} numberOfLines={1}>
-          {disabled ? "Disabled · agents won't use it" : freshness ? `${agents} · ${freshness}` : agents}
+          {disabled ? "사용 중지됨 · 에이전트가 쓰지 않음" : freshness ? `${agents} · ${freshness}` : agents}
         </Text>
         {signedOut ? (
           <Button
@@ -430,8 +430,8 @@ function AccountCard({
             size="small"
             tone="primary"
             icon="LogIn"
-            label="Sign in"
-            tooltip="Sign this account in again"
+            label="로그인"
+            tooltip="이 계정에 다시 로그인합니다"
             tooltipAlign="end"
             onPress={onSignIn}
           />
@@ -441,8 +441,8 @@ function AccountCard({
             size="small"
             tone="primary"
             icon="CirclePlay"
-            label="Enable"
-            tooltip="Use this account again; its agents move back to it"
+            label="다시 사용"
+            tooltip="이 계정을 다시 씁니다. 원래 쓰던 에이전트가 돌아옵니다"
             tooltipAlign="end"
             busy={busy === "toggle"}
             onPress={() => void toggle()}
@@ -453,16 +453,16 @@ function AccountCard({
             size="small"
             tone={account.status === "limited" ? "primary" : "secondary"}
             icon="TimerReset"
-            label="Use reset"
-            accessibilityLabel="Use a banked reset"
-            tooltip="Spend a banked reset to refill this account's limits now"
+            label="초기화권 사용"
+            accessibilityLabel="한도 초기화권 사용"
+            tooltip="한도 초기화권 하나를 써서 이 계정의 한도를 지금 채웁니다"
             tooltipAlign="end"
             disabled={!resets.usableNow}
             onPress={() => setConfirmReset(true)}
           />
         ) : null}
       </View>
-      <Modal title="Use a banked reset?" open={confirmReset} onOpenChange={setConfirmReset}>
+      <Modal title="한도 초기화권을 쓸까요?" open={confirmReset} onOpenChange={setConfirmReset}>
         <Modal.Content>
           <ResetConfirm
             theme={theme}
@@ -482,21 +482,21 @@ function AccountCard({
       {renaming ? (
         <RenameModal theme={theme} account={account} store={store} onClose={() => setRenaming(false)} />
       ) : null}
-      <Modal title={`Remove ${account.label}?`} open={confirmRemove} onOpenChange={setConfirmRemove}>
+      <Modal title={`${account.label} 계정을 삭제할까요?`} open={confirmRemove} onOpenChange={setConfirmRemove}>
         <Modal.Content>
           <Text style={text.body}>
             {account.family === "claude"
-              ? "This signs the account out on this machine and deletes its saved login. Agents using it move to the default account; their conversations are kept."
-              : "This signs the account out on this machine and deletes its saved login. New agents use the default account. Existing ChatGPT conversations on it can't move, so start new agents for them."}
+              ? "이 컴퓨터에서 계정을 로그아웃하고 저장된 로그인 정보를 지웁니다. 이 계정을 쓰던 에이전트는 기본 계정으로 옮기며, 대화는 그대로 남습니다."
+              : "이 컴퓨터에서 계정을 로그아웃하고 저장된 로그인 정보를 지웁니다. 새 에이전트는 기본 계정을 씁니다. 이 계정의 기존 ChatGPT 대화는 옮길 수 없으니, 필요하면 새 에이전트를 시작하세요."}
           </Text>
           <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end" }}>
-            <Button theme={theme} label="Cancel" tooltip="Keep this account" tooltipAlign="end" onPress={() => setConfirmRemove(false)} />
+            <Button theme={theme} label="취소" tooltip="이 계정을 그대로 둡니다" tooltipAlign="end" onPress={() => setConfirmRemove(false)} />
             <Button
               theme={theme}
               tone="danger"
               icon="Trash2"
-              label="Remove"
-              tooltip="Sign it out and delete its saved login; its agents move to the default"
+              label="삭제"
+              tooltip="로그아웃하고 저장된 로그인 정보를 지웁니다. 쓰던 에이전트는 기본 계정으로 옮깁니다"
               tooltipAlign="end"
               busy={busy === "remove"}
               onPress={() => void remove()}
@@ -551,27 +551,27 @@ function RenameModal({
     [theme],
   );
   return (
-    <Modal title="Rename account" open onOpenChange={(open) => (open ? undefined : onClose())}>
+    <Modal title="계정 이름 바꾸기" open onOpenChange={(open) => (open ? undefined : onClose())}>
       <Modal.Content>
-        <Text style={text.muted}>A short name you'll recognise in the composer, like "Work" or "Personal".</Text>
+        <Text style={text.muted}>메시지 입력창에서 알아보기 쉬운 짧은 이름. 예: "회사", "개인".</Text>
         <TextInput
           value={label}
           onChangeText={setLabel}
           autoFocus
           maxLength={40}
-          placeholder="Account name"
+          placeholder="계정 이름"
           placeholderTextColor={theme.colors.foregroundMuted}
           onSubmitEditing={() => void save()}
           style={inputStyle}
-          accessibilityLabel="Account name"
+          accessibilityLabel="계정 이름"
         />
         <View style={{ flexDirection: "row", gap: 8, justifyContent: "flex-end" }}>
-          <Button theme={theme} label="Cancel" tooltip="Keep the current name" tooltipAlign="end" onPress={onClose} />
+          <Button theme={theme} label="취소" tooltip="지금 이름을 그대로 둡니다" tooltipAlign="end" onPress={onClose} />
           <Button
             theme={theme}
             tone="primary"
-            label="Save"
-            tooltip="Save the new name"
+            label="저장"
+            tooltip="새 이름을 저장합니다"
             tooltipAlign="end"
             busy={saving}
             disabled={!label.trim()}
@@ -608,47 +608,47 @@ function AutomationSettings({ theme }: { theme: Theme }) {
   const text = useText(theme);
   if (settings.status === "loading") return null;
   if (settings.status !== "ready") {
-    return <Text style={text.danger}>Preferences unavailable: {settings.error}</Text>;
+    return <Text style={text.danger}>설정을 불러올 수 없습니다: {settings.error}</Text>;
   }
   const save = (patch: Partial<typeof settings.values>) =>
     void settings.save({ ...settings.values, ...patch }, settings.revision);
   return (
     <View style={{ gap: 10 }}>
       <Text style={text.heading} accessibilityRole="header">
-        Automatic switching
+        자동 전환
       </Text>
       <SettingsCard>
         <SettingsSwitch
-          label="Switch accounts when one hits its limit"
-          hint="Agents move to the account with the most room left."
+          label="한도에 닿으면 계정 자동 전환"
+          hint="에이전트가 여유가 가장 많은 계정으로 옮깁니다."
           value={settings.values.autoSwitch}
           disabled={settings.saving}
           onValueChange={(autoSwitch) => save({ autoSwitch })}
         />
         <SettingsSwitch
-          label="Keep going after a switch"
-          hint="Sends a short follow-up so the interrupted task continues."
+          label="전환 후 하던 일 이어가기"
+          hint="짧은 이어가기 메시지를 보내 멈춘 작업을 계속하게 합니다."
           value={settings.values.autoContinue}
           disabled={settings.saving || !settings.values.autoSwitch}
           onValueChange={(autoContinue) => save({ autoContinue })}
         />
         <SettingsSwitch
-          label="Spread new agents across accounts"
-          hint="New agents start on the account with the most room instead of the default."
+          label="새 에이전트를 여러 계정에 나누기"
+          hint="새 에이전트가 기본 계정 대신 여유가 가장 많은 계정으로 시작합니다."
           value={settings.values.balanceNewAgents}
           disabled={settings.saving}
           onValueChange={(balanceNewAgents) => save({ balanceNewAgents })}
         />
         <SettingsSwitch
-          label="Use banked resets when every account is out"
-          hint="Spends one of the account's banked resets instead of stopping. Resets are scarce, so this is off unless you turn it on."
+          label="모든 계정이 한도에 닿으면 한도 초기화권 사용"
+          hint="멈추는 대신 계정의 한도 초기화권을 하나 씁니다. 초기화권은 귀하므로 직접 켜야만 작동합니다."
           value={settings.values.autoRedeem}
           disabled={settings.saving || !settings.values.autoSwitch}
           onValueChange={(autoRedeem) => save({ autoRedeem })}
         />
         <SettingsSwitch
-          label="When every account is out, fork the chat to the other provider"
-          hint="A stopped Claude chat carries on in a new ChatGPT agent, or the other way round, with the conversation so far. The new agent gets no more permissions than the original; the original stays as it was."
+          label="모든 계정이 한도에 닿으면 다른 서비스로 대화 이어가기"
+          hint="멈춘 Claude 대화를 지금까지의 내용과 함께 새 ChatGPT 에이전트에서 이어갑니다(반대 방향도 마찬가지). 새 에이전트는 원래 에이전트보다 더 많은 권한을 받지 않으며, 원래 대화는 그대로 남습니다."
           value={settings.values.forkOtherProvider}
           disabled={settings.saving || !settings.values.autoSwitch}
           onValueChange={(forkOtherProvider) => save({ forkOtherProvider })}
@@ -661,10 +661,10 @@ function AutomationSettings({ theme }: { theme: Theme }) {
 
 export function describeReopen(prefix: string, summary: ReopenSummary): string {
   const parts = [prefix];
-  if (summary.continuedIn) parts.push(`continuing in “${summary.continuedIn.title}”`);
-  if (summary.reopened.length > 0) parts.push(`${summary.reopened.length} agent(s) switched`);
-  if (summary.deferred.length > 0) parts.push(`${summary.deferred.length} will switch after their current turn`);
-  if (summary.failed.length > 0) parts.push(`${summary.failed.length} will switch on their next restart`);
+  if (summary.continuedIn) parts.push(`“${summary.continuedIn.title}”에서 이어감`);
+  if (summary.reopened.length > 0) parts.push(`에이전트 ${summary.reopened.length}개 전환됨`);
+  if (summary.deferred.length > 0) parts.push(`${summary.deferred.length}개는 지금 작업을 마친 뒤 전환`);
+  if (summary.failed.length > 0) parts.push(`${summary.failed.length}개는 다음에 다시 시작할 때 전환`);
   return parts.join(" · ");
 }
 

@@ -267,13 +267,13 @@ export function UsageBar({ theme, limit }: { theme: Theme; limit: UsageWindow })
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", columnGap: 8 }}>
         <Text style={{ color: colors.foregroundMuted, fontSize: 12 }}>{limit.label}</Text>
         <Text style={{ color: colors.foregroundMuted, fontSize: 12 }}>
-          <Text style={{ color: colors.foreground, fontWeight: "600" }}>{formatPercent(percent)}</Text> used
-          {reset ? ` · resets ${reset}` : ""}
+          <Text style={{ color: colors.foreground, fontWeight: "600" }}>{formatPercent(percent)}</Text> 사용
+          {reset ? ` · ${reset} 초기화` : ""}
         </Text>
       </View>
       <View
         accessibilityRole="progressbar"
-        accessibilityLabel={`${limit.label} usage`}
+        accessibilityLabel={`${limit.label} 사용량`}
         accessibilityValue={{ min: 0, max: 100, now: Math.round(percent) }}
         style={{ height: 6, borderRadius: 3, backgroundColor: colors.surface2, overflow: "hidden" }}
       >

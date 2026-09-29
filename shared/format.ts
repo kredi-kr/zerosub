@@ -1,21 +1,21 @@
 import type { AccountView, UsageWindow } from "./model";
 
-/** "in 2h 14m", "in 3d 4h", "now". */
+/** "2시간 14분 후", "3일 4시간 후", "지금". */
 export function formatResetIn(resetsAt: string | null, now: number = Date.now()): string | null {
   if (!resetsAt) return null;
   const at = Date.parse(resetsAt);
   if (!Number.isFinite(at)) return null;
   const minutes = Math.round((at - now) / 60_000);
-  if (minutes <= 0) return "now";
-  if (minutes < 60) return `in ${minutes}m`;
+  if (minutes <= 0) return "지금";
+  if (minutes < 60) return `${minutes}분 후`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) {
     const rest = minutes % 60;
-    return rest === 0 ? `in ${hours}h` : `in ${hours}h ${rest}m`;
+    return rest === 0 ? `${hours}시간 후` : `${hours}시간 ${rest}분 후`;
   }
   const days = Math.floor(hours / 24);
   const restHours = hours % 24;
-  return restHours === 0 ? `in ${days}d` : `in ${days}d ${restHours}h`;
+  return restHours === 0 ? `${days}일 후` : `${days}일 ${restHours}시간 후`;
 }
 
 export function formatPercent(value: number): string {
@@ -63,7 +63,6 @@ export function shortLabel(account: Pick<AccountView, "label">, max = 18): strin
   return label.length <= max ? label : `${label.slice(0, max - 1)}…`;
 }
 
-/** One line summarising an account's headroom, e.g. "42% of 5-hour used · resets in 2h". */
 /**
  * The line under an account's name: its email, plus its organization when that adds something.
  * Claude names a personal organization after its owner ("…'s Organization"), which only repeats it.
@@ -77,24 +76,25 @@ export function accountSubtitle(account: Pick<AccountView, "email" | "organizati
   return [account.email, telling].filter(Boolean).join(" · ") || null;
 }
 
-/** "just now", "6m ago", "3h ago", "2d ago". */
+/** "방금", "6분 전", "3시간 전", "2일 전". */
 export function formatAge(at: string, now: number = Date.now()): string {
   const minutes = Math.floor((now - Date.parse(at)) / 60_000);
-  if (!Number.isFinite(minutes) || minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
+  if (!Number.isFinite(minutes) || minutes < 1) return "방금";
+  if (minutes < 60) return `${minutes}분 전`;
   const hours = Math.round(minutes / 60);
-  return hours < 48 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
+  return hours < 48 ? `${hours}시간 전` : `${Math.round(hours / 24)}일 전`;
 }
 
+/** One line summarising an account's headroom, e.g. "5시간 42% 사용 · 2시간 후 초기화". */
 export function usageSummary(account: AccountView, now: number = Date.now()): string | null {
-  if (account.status === "disabled") return "Disabled for now";
+  if (account.status === "disabled") return "잠시 사용 중지됨";
   if (account.status === "limited") {
     const reset = formatResetIn(account.limitedUntil, now);
-    return reset ? `Limit reached · resets ${reset}` : "Limit reached";
+    return reset ? `한도 도달 · ${reset} 초기화` : "한도 도달";
   }
   const peak = account.usage ? peakUsage(account.usage.windows) : null;
   if (!peak) return null;
   const reset = formatResetIn(peak.resetsAt, now);
-  const base = `${formatPercent(peak.usedPercent)} of ${peak.label.toLowerCase()} used`;
-  return reset ? `${base} · resets ${reset}` : base;
+  const base = `${peak.label} ${formatPercent(peak.usedPercent)} 사용`;
+  return reset ? `${base} · ${reset} 초기화` : base;
 }

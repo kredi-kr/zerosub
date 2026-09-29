@@ -31,7 +31,7 @@ describe("Claude banked resets", () => {
       usableNow: true,
       blockedReason: null,
       expiresAt: "2026-09-30T00:00:00.000Z",
-      refills: ["5-hour", "weekly"],
+      refills: ["5시간", "주간"],
       label: "Limit reset",
     });
   });
@@ -39,16 +39,16 @@ describe("Claude banked resets", () => {
   it("explains why a reset can't be used yet", () => {
     const notAtLimit = parseClaudeResets({ eligible: true, at_limit: false, grants: [grant()], next_grant_id: "grant_1" }, NOW);
     expect(notAtLimit.offer?.usableNow).toBe(false);
-    expect(notAtLimit.offer?.blockedReason).toMatch(/once this account hits a limit/);
+    expect(notAtLimit.offer?.blockedReason).toMatch(/한도에 도달하면 쓸 수 있습니다/);
 
     const blocked = parseClaudeResets(
       { eligible: true, at_limit: true, grants: [grant({ blocking: ["seven_day_opus"], clears: ["five_hour"] })], next_grant_id: "grant_1" },
       NOW,
     );
-    expect(blocked.offer?.blockedReason).toMatch(/doesn't refill your Opus weekly limit/);
+    expect(blocked.offer?.blockedReason).toMatch(/Opus 주간 한도를 채워 주지 않으므로/);
 
     const ineligible = parseClaudeResets({ eligible: false, ineligible_reason: "cli_version", grants: [grant()] }, NOW);
-    expect(ineligible.offer?.blockedReason).toMatch(/Update Claude Code/);
+    expect(ineligible.offer?.blockedReason).toMatch(/Claude Code를 업데이트하세요/);
   });
 
   it("reports whether Claude sees the account at a limit, even for grants usable any time", () => {
@@ -70,12 +70,12 @@ describe("Claude banked resets", () => {
   it("turns claim replies into plain outcomes", () => {
     expect(readClaimReply({ result: "reset", resets_left: 1, cleared: ["five_hour", "seven_day"] })).toEqual({
       outcome: "reset",
-      message: "Limits reset (5-hour and weekly) · 1 left.",
+      message: "한도가 초기화되었습니다 (5시간 및 주간) · 1개 남음.",
       left: 1,
     });
     expect(readClaimReply({ result: "not_limited", resets_left: 2 }).outcome).toBe("not_limited");
-    expect(readClaimReply({ result: "cooldown", cooldown_until: "2026-09-23T13:00:00Z" }).message).toMatch(/cooling down until/);
-    expect(readClaimReply({ result: "ineligible", reason: "tier" }).message).toMatch(/plan doesn't include/);
+    expect(readClaimReply({ result: "cooldown", cooldown_until: "2026-09-23T13:00:00Z" }).message).toMatch(/한도 초기화를 잠시 쓸 수 없습니다 \(.+까지\)/);
+    expect(readClaimReply({ result: "ineligible", reason: "tier" }).message).toMatch(/요금제에는 한도 초기화가 포함되어 있지 않습니다/);
     expect(readClaimReply({ result: "something-new" }).outcome).toBe("unavailable");
     expect(readClaimReply("oops").outcome).toBe("error");
   });
@@ -97,7 +97,7 @@ describe("Codex reset credits", () => {
   });
 
   it("maps consume outcomes", () => {
-    expect(readConsumeReply("reset", 1)).toEqual({ outcome: "reset", message: "Codex usage limits reset · 1 left.", left: 1 });
+    expect(readConsumeReply("reset", 1)).toEqual({ outcome: "reset", message: "Codex 사용 한도가 초기화되었습니다 · 1개 남음.", left: 1 });
     expect(readConsumeReply("nothingToReset", 2).outcome).toBe("not_limited");
     expect(readConsumeReply("noCredit", null)).toMatchObject({ outcome: "none", left: 0 });
     expect(readConsumeReply("alreadyRedeemed", 0).outcome).toBe("already_used");

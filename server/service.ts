@@ -212,7 +212,7 @@ export class Service {
         draft.accounts.unshift(main);
       }
       if (identity) applyIdentity(main, identity, draft);
-      if (!main.label) main.label = `${FAMILY_LABEL[family]} (CLI login)`;
+      if (!main.label) main.label = `${FAMILY_LABEL[family]} (CLI 로그인)`;
     });
   }
 
@@ -548,7 +548,7 @@ export class Service {
           to: account.label,
           reason,
           outcome: "stayed",
-          detail: `It changed accounts ${this.switchGuard.limit} times in 10 minutes, so ZeroSub stopped switching it for now. Pick an account from the account button to carry on.`,
+          detail: `10분 동안 계정을 ${this.switchGuard.limit}번 바꿔서, ZeroSub가 당분간 자동 전환을 멈췄습니다. 계속하려면 계정 버튼에서 계정을 직접 고르세요.`,
         });
       }
       return;
@@ -598,7 +598,7 @@ export class Service {
       if (this.prefs.forkOtherProvider) {
         // Opt-in: every account of this provider is out, so carry on with the other provider.
         const result = await this.forkToOtherProvider(paseo, agentId, family, timeline, "auto").catch((error: unknown) => ({
-          skipped: `Couldn't continue on ${FAMILY_LABEL[OTHER_FAMILY[family]]}: ${describe(error)}`,
+          skipped: `${FAMILY_LABEL[OTHER_FAMILY[family]]}에서 이어서 하지 못했습니다: ${describe(error)}`,
         }));
         if ("fork" in result) {
           this.switchGuard.note(agentId, now);
@@ -616,7 +616,7 @@ export class Service {
         console.log(`[ZeroSub] not continuing ${agentId} on ${FAMILY_LABEL[OTHER_FAMILY[family]]}: ${result.skipped}`);
         detail = result.skipped;
       } else if (mostAvailable(latest, OTHER_FAMILY[family], (id) => this.usage.get(id), now, new Set())) {
-        detail = `Or continue on ${FAMILY_LABEL[OTHER_FAMILY[family]]} in a new agent from the account button.`;
+        detail = `계정 버튼에서 ${FAMILY_LABEL[OTHER_FAMILY[family]]}의 새 에이전트로 이어서 할 수도 있습니다.`;
       }
       await this.appendRow(paseo, agentId, { ...base, to: account.label, reason: "exhausted", outcome: "stayed", detail });
       return;
@@ -650,7 +650,7 @@ export class Service {
         to: next.label,
         reason,
         outcome: "stayed",
-        detail: `New ChatGPT agents will use ${next.label}.`,
+        detail: `새 ChatGPT 에이전트는 ${next.label} 계정을 사용합니다.`,
       });
       return;
     }
@@ -676,7 +676,7 @@ export class Service {
         to: next.label,
         reason,
         outcome: "stayed",
-        detail: `Couldn't start a new agent on ${next.label}: ${describe(error)}`,
+        detail: `${next.label} 계정으로 새 에이전트를 시작하지 못했습니다: ${describe(error)}`,
       });
     }
   }
@@ -707,7 +707,7 @@ export class Service {
     if (!lock) this.redeemLocks.set(account.id, (lock = new Mutex()));
     return lock.run(async () => {
       if (automatic && this.recentlyRedeemed(account.id)) {
-        return { outcome: "reset", message: "A reset was just used on this account.", left: null };
+        return { outcome: "reset", message: "방금 이 계정에서 한도 초기화권을 사용했습니다.", left: null };
       }
       const reply = await this.adapters[account.family]
         .redeemReset(account.home, { onlyAtLimit: automatic })
@@ -748,8 +748,8 @@ export class Service {
   async redeem(paseo: PaseoApi, accountId: string, agentId?: string): Promise<RedeemResult> {
     this.attach(paseo);
     const account = findAccount(await this.store.read(), accountId);
-    if (!account) throw new Error("That account no longer exists.");
-    if (!account.signedIn) throw new Error(`${account.label} is signed out. Sign it in first.`);
+    if (!account) throw new Error("그 계정은 더 이상 없습니다.");
+    if (!account.signedIn) throw new Error(`${account.label} 계정은 로그아웃됨 상태입니다. 먼저 로그인하세요.`);
     const reply = await this.redeemOn(account, false);
     let continued = false;
     if (reply.outcome === "reset" && agentId) {
@@ -891,20 +891,20 @@ export class Service {
     );
     const earlierAccount = earlier && (findAccount(state, state.bindings[earlier.id]?.accountId) ?? mainAccount(state, other));
     if (earlier && earlierAccount) {
-      return { fork: { agentId: earlier.id, title: earlier.title ?? `${name} agent` }, account: earlierAccount, family: other };
+      return { fork: { agentId: earlier.id, title: earlier.title ?? `${name} 에이전트` }, account: earlierAccount, family: other };
     }
 
-    if (this.availability.get(other)?.ok === false) return { skipped: `${PROVIDER_NAME[other]} isn't installed where the daemon runs.` };
+    if (this.availability.get(other)?.ok === false) return { skipped: `Paseo 데몬이 실행 중인 컴퓨터에 ${PROVIDER_NAME[other]}가 설치되어 있지 않습니다.` };
     const provider = families[other] === other ? other : Object.keys(families).find((id) => families[id] === other);
     const available = provider
       ? (await paseo.providers.listAvailable()).providers?.some((entry) => entry.provider === provider && entry.available)
       : false;
-    if (!provider || !available) return { skipped: `${name} isn't available in Paseo on this host.` };
+    if (!provider || !available) return { skipped: `이 컴퓨터의 Paseo에서는 ${name}를 쓸 수 없습니다.` };
     const account = mostAvailable(state, other, (id) => this.usage.get(id), Date.now(), new Set());
-    if (!account) return { skipped: `Every ${name} account is at its limit too.` };
+    if (!account) return { skipped: `${name} 계정도 모두 한도에 도달했습니다.` };
 
     const original = (await paseo.agents.ref(agentId).refresh())?.agent;
-    if (!original) throw new Error("That agent is no longer available.");
+    if (!original) throw new Error("그 에이전트를 더 이상 찾을 수 없습니다.");
     const [sourceModes, targetModes] = await Promise.all([
       paseo.providers.listModes(original.provider).then((result) => result.modes ?? []),
       paseo.providers.listModes(provider).then((result) => result.modes ?? []),
@@ -913,7 +913,7 @@ export class Service {
     if (!modeId) {
       const current = sourceModes.find((mode) => mode.id === original.currentModeId)?.label;
       return {
-        skipped: `${name} has no mode as careful as this agent's${current ? ` (“${current}”)` : ""}, so ZeroSub didn't continue it there.`,
+        skipped: `${name}에는 이 에이전트의 모드${current ? ` (“${current}”)` : ""}만큼 신중한 모드가 없어서, ZeroSub가 그쪽에서 이어서 하지 않았습니다.`,
       };
     }
 
@@ -942,11 +942,11 @@ export class Service {
   async forkAgent(paseo: PaseoApi, agentId: string): Promise<Continuation> {
     this.attach(paseo);
     const info = await agentInfo(paseo, agentId);
-    if (!info || info.archived) throw new Error("That agent is no longer available.");
+    if (!info || info.archived) throw new Error("그 에이전트를 더 이상 찾을 수 없습니다.");
     const family = (await this.families.resolve(paseo))[info.provider];
-    if (!family) throw new Error(`${info.provider} agents don't use Claude or ChatGPT subscription accounts.`);
+    if (!family) throw new Error(`${info.provider} 에이전트는 Claude나 ChatGPT 구독 계정을 쓰지 않습니다.`);
     if (info.status === "running" || info.status === "initializing") {
-      throw new Error("This agent is working right now. Wait for its turn to finish, then continue it elsewhere.");
+      throw new Error("이 에이전트는 지금 작업 중입니다. 이번 차례가 끝난 뒤 다른 곳에서 이어서 하세요.");
     }
     const result = await this.forkToOtherProvider(paseo, agentId, family, undefined, "user");
     if ("skipped" in result) throw new Error(result.skipped);
@@ -1106,7 +1106,7 @@ export class Service {
         summary.reopened.push(agentId);
         await this.appendRow(paseo, agentId, await this.landed(row, agentId));
       } else if (outcome === "deferred") summary.deferred.push(agentId);
-      else if (outcome === "failed") summary.failed.push({ agentId, error: "Reload failed" });
+      else if (outcome === "failed") summary.failed.push({ agentId, error: "다시 불러오기 실패" });
     }
     return summary;
   }
@@ -1275,21 +1275,21 @@ export class Service {
       const availability = this.availability.get(family);
       if (availability && !availability.ok) {
         warnings.push(
-          `${PROVIDER_NAME[family]} isn't installed where the daemon can run it${availability.detail ? ` (${availability.detail})` : ""}. Install it to add ${FAMILY_LABEL[family]} accounts.`,
+          `Paseo 데몬이 실행 중인 컴퓨터에 ${PROVIDER_NAME[family]}가 설치되어 있지 않습니다${availability.detail ? ` (${availability.detail})` : ""}. ${FAMILY_LABEL[family]} 계정을 추가하려면 먼저 설치하세요.`,
         );
       }
     }
     if (process.env.CLAUDE_CODE_OAUTH_TOKEN || process.env.ANTHROPIC_AUTH_TOKEN || process.env.ANTHROPIC_API_KEY) {
       warnings.push(
-        "The daemon's environment sets a Claude API key or token. Agents on your CLI login use it; agents on added accounts use their own sign-in.",
+        "Paseo 데몬의 환경 설정에 Claude API 키나 토큰이 들어 있습니다. CLI 로그인 계정으로 도는 에이전트는 그 키를 쓰고, 추가한 계정의 에이전트는 각자의 로그인을 씁니다.",
       );
     }
     if (process.env.CODEX_ACCESS_TOKEN) {
-      warnings.push("The daemon's environment sets CODEX_ACCESS_TOKEN. Codex agents on your CLI login use it instead of a ChatGPT sign-in.");
+      warnings.push("Paseo 데몬의 환경 설정에 CODEX_ACCESS_TOKEN이 들어 있습니다. CLI 로그인 계정으로 도는 Codex 에이전트는 ChatGPT 로그인 대신 그 값을 씁니다.");
     }
     if ((await this.reopener.locate()) === null) {
       warnings.push(
-        "Paseo's command-line tool wasn't found, so running agents change accounts the next time their session starts instead of right away.",
+        "Paseo 명령어 도구를 찾지 못해서, 실행 중인 에이전트는 바로 바뀌지 않고 다음에 세션이 시작될 때 계정을 바꿉니다.",
       );
     }
     return warnings;
@@ -1300,9 +1300,9 @@ export class Service {
   async setDefault(paseo: PaseoApi, accountId: string): Promise<ReopenSummary> {
     this.attach(paseo);
     const account = findAccount(await this.store.read(), accountId);
-    if (!account) throw new Error("That account no longer exists.");
-    if (!account.signedIn) throw new Error(`${account.label} is signed out. Sign it in first.`);
-    if (account.disabled) throw new Error(`${account.label} is disabled. Enable it before making it the default.`);
+    if (!account) throw new Error("그 계정은 더 이상 없습니다.");
+    if (!account.signedIn) throw new Error(`${account.label} 계정은 로그아웃됨 상태입니다. 먼저 로그인하세요.`);
+    if (account.disabled) throw new Error(`${account.label} 계정은 사용 중지됨 상태입니다. 기본 계정으로 정하기 전에 다시 사용으로 바꾸세요.`);
     if (!this.adapters[account.family].portable) await this.pinThreads(paseo, account.family);
     await this.store.update((draft) => {
       draft.defaults[account.family] = account.id;
@@ -1321,11 +1321,11 @@ export class Service {
     this.attach(paseo);
     const state = await this.store.read();
     const account = findAccount(state, accountId);
-    if (!account) throw new Error("That account no longer exists.");
+    if (!account) throw new Error("그 계정은 더 이상 없습니다.");
     if (account.disabled === !enabled) return { ...emptySummary(), stayed: 0 };
     if (!enabled && !accountsOf(state, account.family).some((other) => other.id !== account.id && other.signedIn && !other.disabled)) {
       // With nothing else to route to, sessions would quietly fall back to the CLI login.
-      throw new Error(`${account.label} is the only ${FAMILY_LABEL[account.family]} account in use. Add or enable another one first.`);
+      throw new Error(`${account.label} 계정은 지금 쓰고 있는 유일한 ${FAMILY_LABEL[account.family]} 계정입니다. 먼저 다른 계정을 추가하거나 다시 사용으로 바꾸세요.`);
     }
     await this.store.update((draft) => {
       const target = findAccount(draft, accountId);
@@ -1373,26 +1373,26 @@ export class Service {
       account.limitedUntil = null;
       account.limitKind = null;
     });
-    if (!findAccount(state, accountId)) throw new Error("That account no longer exists.");
+    if (!findAccount(state, accountId)) throw new Error("그 계정은 더 이상 없습니다.");
     void this.refreshUsage(accountId, true).catch(() => undefined);
   }
 
   async setAgentAccount(paseo: PaseoApi, agentId: string, accountId: string | null): Promise<ReopenSummary> {
     this.attach(paseo);
     const info = await agentInfo(paseo, agentId);
-    if (!info) throw new Error("That agent is no longer available.");
+    if (!info) throw new Error("그 에이전트를 더 이상 찾을 수 없습니다.");
     const family = (await this.families.resolve(paseo))[info.provider];
-    if (!family) throw new Error(`${info.provider} agents don't use Claude or ChatGPT subscription accounts.`);
+    if (!family) throw new Error(`${info.provider} 에이전트는 Claude나 ChatGPT 구독 계정을 쓰지 않습니다.`);
     const adapter = this.adapters[family];
     const state = await this.store.read();
     const target = accountId ? findAccount(state, accountId) : defaultAccount(state, family);
-    if (!target || target.family !== family) throw new Error("That account can't be used with this agent.");
-    if (!target.signedIn) throw new Error(`${target.label} is signed out. Sign it in first.`);
-    if (accountId && target.disabled) throw new Error(`${target.label} is disabled. Enable it in Accounts first.`);
+    if (!target || target.family !== family) throw new Error("그 계정은 이 에이전트에 쓸 수 없습니다.");
+    if (!target.signedIn) throw new Error(`${target.label} 계정은 로그아웃됨 상태입니다. 먼저 로그인하세요.`);
+    if (accountId && target.disabled) throw new Error(`${target.label} 계정은 사용 중지됨 상태입니다. 먼저 계정 화면에서 다시 사용으로 바꾸세요.`);
 
     if (!adapter.portable) {
       if (info.status === "running" || info.status === "initializing") {
-        throw new Error("This agent is working right now. Wait for its turn to finish, then switch.");
+        throw new Error("이 에이전트는 지금 작업 중입니다. 이번 차례가 끝난 뒤 바꾸세요.");
       }
       if (info.hasHistory) {
         const binding = state.bindings[agentId];
@@ -1437,16 +1437,16 @@ export class Service {
       account.label = label;
       account.autoLabel = false;
     });
-    if (!findAccount(state, accountId)) throw new Error("That account no longer exists.");
+    if (!findAccount(state, accountId)) throw new Error("그 계정은 더 이상 없습니다.");
   }
 
   async remove(paseo: PaseoApi, accountId: string): Promise<number> {
     this.attach(paseo);
     const state = await this.store.read();
     const account = findAccount(state, accountId);
-    if (!account) throw new Error("That account no longer exists.");
+    if (!account) throw new Error("그 계정은 더 이상 없습니다.");
     if (account.kind === "main") {
-      throw new Error("Your CLI login can't be removed here. Sign out with `claude auth logout` or `codex logout` instead.");
+      throw new Error("CLI 로그인 계정은 여기서 지울 수 없습니다. 대신 `claude auth logout` 또는 `codex logout` 명령으로 로그아웃하세요.");
     }
     if (!this.adapters[account.family].portable) {
       // These conversations can't move to another ChatGPT account, so removing theirs would strand them.
@@ -1458,11 +1458,8 @@ export class Service {
           (state.bindings[agent.id]?.accountId ?? state.sessions[agent.id]?.accountId) === accountId,
       );
       if (stranded.length > 0) {
-        const one = stranded.length === 1;
         throw new Error(
-          `${stranded.length} ChatGPT conversation${one ? "" : "s"} still ${one ? "runs" : "run"} on ${account.label} and can't move to another account. Archive ${
-            one ? "it" : "them"
-          } (the work stays in your files) or continue ${one ? "it" : "them"} on another account from the account button, then remove ${account.label}.`,
+          `ChatGPT 대화 ${stranded.length}개가 아직 ${account.label} 계정에서 돌아가고 있고, 다른 계정으로 옮길 수 없습니다. 그 대화를 보관하거나(작업한 파일은 그대로 남습니다) 계정 버튼에서 다른 계정으로 이어서 한 뒤, ${account.label} 계정을 지우세요.`,
         );
       }
     }
@@ -1496,14 +1493,14 @@ export class Service {
       await this.ensureFamily(family);
       availability = this.availability.get(family);
     }
-    if (!availability?.ok) throw new Error(`${PROVIDER_NAME[family]} isn't installed on the daemon machine.`);
+    if (!availability?.ok) throw new Error(`Paseo 데몬이 실행 중인 컴퓨터에 ${PROVIDER_NAME[family]}가 설치되어 있지 않습니다.`);
     // One flow per provider at a time (Codex's browser sign-in uses a fixed local port).
     for (const login of this.logins.values()) {
       if (login.family === family && !login.finishedAt) await this.cancelLogin(login.id);
     }
     const state = await this.store.read();
     const existing = accountId ? findAccount(state, accountId) : undefined;
-    if (accountId && (!existing || existing.family !== family)) throw new Error("That account no longer exists.");
+    if (accountId && (!existing || existing.family !== family)) throw new Error("그 계정은 더 이상 없습니다.");
 
     const id = randomBytes(6).toString("hex");
     const home = existing ? existing.home : join(homesDir(), `${family}-${id}`);
@@ -1552,7 +1549,7 @@ export class Service {
 
   async submitCode(loginId: string, code: string): Promise<LoginView> {
     const session = this.logins.get(loginId);
-    if (!session?.handle) throw new Error("This sign-in has expired. Start again.");
+    if (!session?.handle) throw new Error("이 로그인은 만료되었습니다. 처음부터 다시 시작하세요.");
     if (!session.finishedAt) await session.handle.submitCode(code);
     return session.view;
   }
@@ -1563,7 +1560,7 @@ export class Service {
     if (!session.finishedAt) {
       session.finishedAt = Date.now();
       session.handle?.cancel();
-      session.view = { ...session.view, step: "canceled", message: "Sign-in was canceled." };
+      session.view = { ...session.view, step: "canceled", message: "로그인이 취소되었습니다." };
       this.scheduleCleanup();
     }
     return session.view;
@@ -1571,12 +1568,12 @@ export class Service {
 
   private async finishLogin(session: LoginSession, result: { ok: boolean; message: string | null }): Promise<void> {
     if (session.finishedAt) return;
-    if (!result.ok) return this.failLogin(session, result.message ?? "Sign-in did not finish.");
+    if (!result.ok) return this.failLogin(session, result.message ?? "로그인이 끝나지 않았습니다.");
     session.view = { ...session.view, step: "verifying", message: null };
     const adapter = this.adapters[session.family];
     const identity = await adapter.identity(session.home).catch(() => null);
     if (session.finishedAt) return; // Canceled while verifying.
-    if (!identity?.signedIn) return this.failLogin(session, "Sign-in finished, but the account isn't signed in. Try again.");
+    if (!identity?.signedIn) return this.failLogin(session, "로그인 절차는 끝났지만 계정이 로그인되지 않았습니다. 다시 시도하세요.");
 
     const state = await this.store.read();
     const existing = findAccount(state, session.accountId);
@@ -1586,7 +1583,7 @@ export class Service {
       const expected = existing.email ?? existing.label;
       return this.failLogin(
         session,
-        `You signed in as ${identity.email ?? "a different account"}, but this is ${expected}. Sign in as ${expected}, or use Add account for the other one.`,
+        `${identity.email ?? "다른 계정"}(으)로 로그인했지만, 이 계정은 ${expected}입니다. ${expected}(으)로 로그인하거나, 다른 계정은 계정 추가로 넣으세요.`,
       );
     }
     // The CLI's own login is whatever the user signs it into; only added accounts must be distinct.
@@ -1600,7 +1597,7 @@ export class Service {
       if (!existing && session.home) await adapter.logout(session.home).catch(() => undefined);
       return this.failLogin(
         session,
-        `${identity.email ?? "That account"} is already added as "${duplicate.label}". Sign in with a different account.`,
+        `${identity.email ?? "그 계정"}은(는) 이미 "${duplicate.label}"(으)로 추가되어 있습니다. 다른 계정으로 로그인하세요.`,
       );
     }
     if (session.finishedAt) return;

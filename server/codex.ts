@@ -40,7 +40,7 @@ class AppServer {
     this.exited = new Promise((resolve) => {
       const finish = (error?: Error) => {
         this.closed = true;
-        const reason = error ?? new Error(this.stderr.trim().split("\n").pop() || "Codex exited");
+        const reason = error ?? new Error(this.stderr.trim().split("\n").pop() || "Codex가 종료되었습니다.");
         for (const request of this.pending.values()) request.reject(reason);
         this.pending.clear();
         resolve();
@@ -75,12 +75,12 @@ class AppServer {
   }
 
   request(method: string, params?: unknown, timeoutMs = 30_000): Promise<unknown> {
-    if (this.closed || this.ending) return Promise.reject(new Error("Codex is not running"));
+    if (this.closed || this.ending) return Promise.reject(new Error("Codex가 실행 중이 아닙니다."));
     const id = this.nextId++;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new Error(`Codex did not answer ${method}`));
+        reject(new Error(`Codex가 ${method} 요청에 응답하지 않았습니다.`));
       }, timeoutMs);
       this.pending.set(id, {
         resolve: (value) => {
@@ -99,7 +99,7 @@ class AppServer {
   close(): void {
     if (this.closed || this.ending) return;
     this.ending = true;
-    for (const request of this.pending.values()) request.reject(new Error("Codex was stopped"));
+    for (const request of this.pending.values()) request.reject(new Error("Codex가 중지되었습니다."));
     this.pending.clear();
     this.child.stdin.end();
     this.child.kill("SIGTERM");
@@ -142,7 +142,7 @@ class AppServer {
       if (!request) return;
       this.pending.delete(id);
       const error = message.error as { message?: unknown } | undefined;
-      if (error) request.reject(new Error(typeof error.message === "string" ? error.message : "Codex request failed"));
+      if (error) request.reject(new Error(typeof error.message === "string" ? error.message : "Codex 요청이 실패했습니다."));
       else request.resolve(message.result);
       return;
     }
@@ -178,7 +178,7 @@ export class CodexAdapter implements FamilyAdapter {
     const { command, prefix } = await providerCommand("codex");
     const result = await run(command, [...prefix, "--version"], { timeoutMs: 30_000 });
     if (result.code === 0) return { ok: true, detail: null };
-    return { ok: false, detail: (result.stderr || result.stdout).trim().split("\n")[0] || `${command} not found` };
+    return { ok: false, detail: (result.stderr || result.stdout).trim().split("\n")[0] || `${command} 명령을 찾을 수 없습니다.` };
   }
 
   prepareHome(home: string): Promise<void> {
@@ -213,11 +213,11 @@ export class CodexAdapter implements FamilyAdapter {
       if (!details || details.type !== "chatgpt") {
         const signedIn = Boolean(details);
         return {
-          identity: { signedIn, email: null, plan: signedIn ? "API key" : null, organization: null, identity: null },
+          identity: { signedIn, email: null, plan: signedIn ? "API 키" : null, organization: null, identity: null },
           usage: {
             fetchedAt,
             windows: [],
-            error: signedIn ? "Signed in with an API key, not a ChatGPT plan." : "Not signed in.",
+            error: signedIn ? "ChatGPT 요금제가 아니라 API 키로 로그인되어 있습니다." : "로그인되어 있지 않습니다.",
             cached: false,
             resets: null,
           },
@@ -297,7 +297,7 @@ export class CodexAdapter implements FamilyAdapter {
     } catch (error) {
       return {
         outcome: "error",
-        message: `The reset request didn't finish (${error instanceof Error ? error.message : String(error)}). Refresh usage before trying again.`,
+        message: `한도 초기화 요청이 끝나지 않았습니다 (${error instanceof Error ? error.message : String(error)}). 다시 시도하기 전에 사용량을 새로 고치세요.`,
         left: null,
       };
     } finally {
@@ -336,7 +336,7 @@ class CodexLogin extends ProgressEmitter implements LoginHandle {
       if (params.success === true) this.settle({ ok: true, message: null });
       else this.settle({ ok: false, message: friendlyCodexError(typeof params.error === "string" ? params.error : null) });
     });
-    void server.exited.then(() => this.settle({ ok: false, message: "Codex stopped before sign-in finished." }));
+    void server.exited.then(() => this.settle({ ok: false, message: "로그인이 끝나기 전에 Codex가 멈췄습니다." }));
     void this.begin(method);
   }
 
@@ -352,7 +352,7 @@ class CodexLogin extends ProgressEmitter implements LoginHandle {
           url: typeof result.verificationUrl === "string" ? result.verificationUrl : null,
           userCode: typeof result.userCode === "string" ? result.userCode : null,
           message:
-            "If the page says device codes are off, turn on “device code login” in ChatGPT → Settings → Security, or use the browser option.",
+            "페이지에 기기 코드 로그인이 꺼져 있다고 나오면 ChatGPT → 설정(Settings) → 보안(Security)에서 “device code login”을 켜거나, 브라우저로 로그인하는 방법을 쓰세요.",
         });
       } else {
         this.update({ step: "waiting", url: typeof result.authUrl === "string" ? result.authUrl : null });
@@ -363,32 +363,32 @@ class CodexLogin extends ProgressEmitter implements LoginHandle {
   }
 
   async submitCode(): Promise<void> {
-    throw new Error("ChatGPT sign-in doesn't use a pasted code. Finish on the sign-in page.");
+    throw new Error("ChatGPT 로그인은 코드를 붙여 넣지 않습니다. 로그인 페이지에서 마무리하세요.");
   }
 
   cancel(): void {
     if (this.done) return;
     const loginId = this.loginId;
     if (loginId) void this.server.request("account/login/cancel", { loginId }, 5_000).catch(() => undefined);
-    setTimeout(() => this.settle({ ok: false, message: "Sign-in was canceled." }), 300);
+    setTimeout(() => this.settle({ ok: false, message: "로그인이 취소되었습니다." }), 300);
   }
 }
 
 function friendlyCodexError(message: string | null): string {
-  if (!message) return "Sign-in did not finish.";
+  if (!message) return "로그인이 끝나지 않았습니다.";
   if (/device code login is not enabled/i.test(message)) {
-    return "Device-code sign-in is turned off for this ChatGPT account. Turn on “device code login” in ChatGPT → Settings → Security, or sign in with the browser option.";
+    return "이 ChatGPT 계정은 기기 코드 로그인이 꺼져 있습니다. ChatGPT → 설정(Settings) → 보안(Security)에서 “device code login”을 켜거나, 브라우저로 로그인하는 방법을 쓰세요.";
   }
-  if (/not completed|timed out/i.test(message)) return "Sign-in timed out or was closed. Try again.";
+  if (/not completed|timed out/i.test(message)) return "로그인 시간이 지났거나 창이 닫혔습니다. 다시 시도하세요.";
   return message;
 }
 
 function windowLabel(minutes: number | null): string {
-  if (!minutes) return "Usage";
-  if (minutes === 10_080) return "Weekly";
-  if (minutes % 1_440 === 0) return `${minutes / 1_440}-day`;
-  if (minutes % 60 === 0) return `${minutes / 60}-hour`;
-  return `${minutes}-minute`;
+  if (!minutes) return "사용량";
+  if (minutes === 10_080) return "주간";
+  if (minutes % 1_440 === 0) return `${minutes / 1_440}일`;
+  if (minutes % 60 === 0) return `${minutes / 60}시간`;
+  return `${minutes}분`;
 }
 
 export function parseRateLimits(snapshot: unknown): UsageWindow[] {
@@ -433,27 +433,27 @@ export function parseResetCredits(summary: unknown): ResetOffer | null {
     usableNow: true,
     blockedReason: null,
     expiresAt: expiring[0] !== undefined ? new Date(expiring[0] * 1000).toISOString() : null,
-    refills: ["5-hour", "weekly"],
+    refills: ["5시간", "주간"],
     label: title?.trim() ?? null,
   };
 }
 
 export function readConsumeReply(outcome: unknown, left: number | null): RedeemReply {
-  const leftText = left === null ? "" : ` · ${left} left`;
+  const leftText = left === null ? "" : ` · ${left}개 남음`;
   switch (outcome) {
     case "reset":
-      return { outcome: "reset", message: `Codex usage limits reset${leftText}.`, left };
+      return { outcome: "reset", message: `Codex 사용 한도가 초기화되었습니다${leftText}.`, left };
     case "nothingToReset":
       return {
         outcome: "not_limited",
-        message: "Nothing to reset: this account's limits aren't used up, so the reset was kept.",
+        message: "초기화할 한도가 없습니다. 이 계정은 아직 한도를 다 쓰지 않아 한도 초기화권을 쓰지 않고 남겨 두었습니다.",
         left,
       };
     case "noCredit":
-      return { outcome: "none", message: "No banked resets left on this account.", left: 0 };
+      return { outcome: "none", message: "이 계정에 남은 한도 초기화권이 없습니다.", left: 0 };
     case "alreadyRedeemed":
-      return { outcome: "already_used", message: `That reset was already used${leftText}.`, left };
+      return { outcome: "already_used", message: `이미 사용된 한도 초기화권입니다${leftText}.`, left };
     default:
-      return { outcome: "error", message: "Codex sent an unexpected reply. Refresh usage before trying again.", left };
+      return { outcome: "error", message: "Codex가 예상하지 못한 응답을 보냈습니다. 다시 시도하기 전에 사용량을 새로 고치세요.", left };
   }
 }
