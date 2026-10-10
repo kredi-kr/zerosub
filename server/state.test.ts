@@ -40,6 +40,18 @@ describe("salvageState", () => {
 });
 
 describe("StateStore", () => {
+  it("persists a dismissed CLI account across a reload", async () => {
+    const path = join(dir, "state.json");
+    const store = new StateStore(path);
+    await store.update((draft) => {
+      draft.dismissedMain.claude = true;
+      draft.defaults.claude = "claude-other";
+    });
+    const reopened = await new StateStore(path).read();
+    expect(reopened.dismissedMain).toEqual({ claude: true, codex: false });
+    expect(reopened.defaults.claude).toBe("claude-other");
+  });
+
   it("backs up a file it can't parse instead of silently discarding it", async () => {
     const path = join(dir, "state.json");
     await writeFile(path, "{ not json");

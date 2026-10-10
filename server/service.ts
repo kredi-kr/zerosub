@@ -207,9 +207,11 @@ export class Service {
     await this.store.update((draft) => {
       let main = findAccount(draft, MAIN_ACCOUNT_ID[family]);
       if (!main) {
+        if (draft.dismissedMain[family] && !identity?.signedIn) return;
         main = newAccount({ id: MAIN_ACCOUNT_ID[family], family, kind: "main", home: null });
         main.signedIn = false;
         draft.accounts.unshift(main);
+        draft.dismissedMain[family] = false;
       }
       if (identity) applyIdentity(main, identity, draft);
       if (!main.label) main.label = `${FAMILY_LABEL[family]} (CLI 로그인)`;
@@ -1445,7 +1447,7 @@ export class Service {
     const state = await this.store.read();
     const account = findAccount(state, accountId);
     if (!account) throw new Error("그 계정은 더 이상 없습니다.");
-    if (account.kind === "main") {
+    if (account.kind === "main" && (await this.adapters[account.family].identity(null)).signedIn) {
       throw new Error("CLI 로그인 계정은 여기서 지울 수 없습니다. 대신 `claude auth logout` 또는 `codex logout` 명령으로 로그아웃하세요.");
     }
     if (!this.adapters[account.family].portable) {
@@ -1468,6 +1470,7 @@ export class Service {
       .map(([agentId]) => agentId);
     await this.store.update((draft) => {
       draft.accounts = draft.accounts.filter((entry) => entry.id !== accountId);
+      if (account.kind === "main") draft.dismissedMain[account.family] = true;
       for (const [agentId, binding] of Object.entries(draft.bindings)) {
         if (binding.accountId === accountId) delete draft.bindings[agentId];
       }
