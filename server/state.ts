@@ -54,6 +54,9 @@ export const StoredStateSchema = z.object({
   defaults: z
     .object({ claude: z.string().nullable().default(null), codex: z.string().nullable().default(null) })
     .default({ claude: null, codex: null }),
+  /** A signed-out CLI account explicitly removed from the registry. */
+  dismissedMain: z.object({ claude: z.boolean().default(false), codex: z.boolean().default(false) })
+    .default({ claude: false, codex: false }),
   /** Per-agent overrides of the default account. */
   bindings: z.record(z.string(), BindingSchema).default({}),
   /** Which account each agent's live provider session was opened with. */
@@ -99,6 +102,7 @@ export function salvageState(raw: unknown): { state: StoredState; dropped: boole
       version: 1,
       accounts,
       defaults,
+      dismissedMain: keep(StoredStateSchema.shape.dismissedMain, source.dismissedMain) ?? { claude: false, codex: false },
       bindings: records(BindingSchema, source.bindings),
       sessions: records(LiveSessionSchema, source.sessions),
     },
