@@ -1447,7 +1447,7 @@ export class Service {
     const state = await this.store.read();
     const account = findAccount(state, accountId);
     if (!account) throw new Error("그 계정은 더 이상 없습니다.");
-    if (account.kind === "main" && (await this.adapters[account.family].identity(null).catch(() => null))?.signedIn) {
+    if (account.kind === "main" && (await this.adapters[account.family].identity(null)).signedIn) {
       throw new Error("CLI 로그인 계정은 여기서 지울 수 없습니다. 대신 `claude auth logout` 또는 `codex logout` 명령으로 로그아웃하세요.");
     }
     if (!this.adapters[account.family].portable) {
