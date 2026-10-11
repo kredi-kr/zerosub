@@ -343,8 +343,11 @@ describe("forking to the other provider", () => {
     expect(created).toHaveLength(1);
     const fork = created[0];
     expect(fork?.config).toEqual({ provider: "codex/gpt-5.6-sol", modeId: "full-access" });
-    expect(fork?.title).toBe("Fix the build (ChatGPT에서 이어서)");
-    expect(fork?.labels).toEqual({ "zerosub.continued-from": AGENT });
+    expect(fork?.title).toMatch(/^Fix the build \(ChatGPT에서 이어서 \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} KST\)$/);
+    expect(fork?.labels).toMatchObject({
+      "zerosub.continued-from": AGENT,
+      "zerosub.continued-at": expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+    });
     expect(fork?.prompt).toMatch(/earlier Claude Code session that stopped because every Claude account reached its usage limit/);
     expect((await store.read()).bindings[fork?.agentId ?? ""]).toMatchObject({ accountId: CODEX_MAIN, source: "thread" });
     expect(notes.at(-1)).toMatchObject({ outcome: "continued", toFamily: "codex", to: "hello", continuedIn: { agentId: fork?.agentId } });

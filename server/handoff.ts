@@ -6,6 +6,21 @@ type PaseoApi = PluginHookContext["paseo"];
 
 /** Label on a continuation agent naming the agent it carries on from. */
 export const CONTINUED_FROM_LABEL = "zerosub.continued-from";
+/** Label on a continuation agent recording when it was created. */
+export const CONTINUED_AT_LABEL = "zerosub.continued-at";
+
+const AUTOMATIC_CONTINUATION_SUFFIX =
+  / \((?:이어서|(?:Claude|ChatGPT)에서 이어서)(?: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} KST)?\)$/;
+const KST_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
 
 const MAX_TRANSCRIPT = 40_000;
 const MAX_FIRST_MESSAGE = 6_000;
@@ -13,6 +28,16 @@ const MAX_FIRST_MESSAGE = 6_000;
 function clip(text: string, max: number): string {
   const trimmed = text.trim();
   return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max)}…`;
+}
+
+function formatKstTimestamp(date: Date): string {
+  const parts = Object.fromEntries(KST_DATE_TIME_FORMATTER.formatToParts(date).map(({ type, value }) => [type, value]));
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} KST`;
+}
+
+function continuationTitleBase(source: { title?: string | null; labels?: Record<string, string> | null }, fallback: string): string {
+  const title = source.title?.trim() || fallback;
+  return source.labels?.[CONTINUED_FROM_LABEL] ? title.replace(AUTOMATIC_CONTINUATION_SUFFIX, "") : title;
 }
 
 function describeTool(item: Extract<AgentTimelineItem, { type: "tool_call" }>): string {
@@ -151,9 +176,12 @@ export async function continueInNewAgent(options: {
 
   const agentId = randomUUID();
   await options.bind(agentId);
+  const continuedAt = new Date();
+  const continuedAtKst = formatKstTimestamp(continuedAt);
+  const titleBase = continuationTitleBase(source, target ? "작업" : "Codex 작업");
   const title = target
-    ? `${source.title?.trim() || "작업"} (${target.label}에서 이어서)`
-    : `${source.title?.trim() || "Codex 작업"} (이어서)`;
+    ? `${titleBase} (${target.label}에서 이어서 ${continuedAtKst})`
+    : `${titleBase} (이어서 ${continuedAtKst})`;
   // Modes and thinking options are provider-specific: only carry them over within one provider.
   const config = target
     ? { provider: `${provider}/${model}`, modeId: target.modeId }
@@ -167,7 +195,10 @@ export async function continueInNewAgent(options: {
     config,
     title,
     prompt: continuationPrompt(buildTranscript(timeline), options.why, options.previous),
-    labels: { [CONTINUED_FROM_LABEL]: sourceAgentId },
+    labels: {
+      [CONTINUED_FROM_LABEL]: sourceAgentId,
+      [CONTINUED_AT_LABEL]: continuedAt.toISOString(),
+    },
   };
   if (source.workspaceId) await paseo.workspaces.ref(source.workspaceId).agents.create(request);
   else await paseo.agents.create({ ...request, cwd: source.cwd });

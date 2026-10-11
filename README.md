@@ -51,7 +51,7 @@ Then open **Accounts (ZeroSub)** in the sidebar.
 ### Claude vs. ChatGPT when switching mid-conversation
 
 - **Claude:** a conversation moves to another account in place. The agent reopens on the new account with its full history and continues.
-- **ChatGPT (Codex):** Codex encrypts its reasoning per ChatGPT account, so another account can't read an existing thread. The thread stays on its account. When it hits a limit, or you pick another account for it, ZeroSub starts a **continuation agent** on the other account. It goes in the same workspace and gets a transcript of the conversation so far, so the work keeps going. New Codex agents simply start on the chosen account.
+- **ChatGPT (Codex):** Codex encrypts its reasoning per ChatGPT account, so another account can't read an existing thread. The thread stays on its account. When it hits a limit, or you pick another account for it, ZeroSub starts a **continuation agent** on the other account. It goes in the same workspace and gets a transcript of the conversation so far, so the work keeps going. Its title includes the creation time in KST, and the same instant is recorded as a UTC ISO timestamp in the `zerosub.continued-at` label. Repeated continuations keep the original task title instead of accumulating generated suffixes. New Codex agents simply start on the chosen account.
 
 ### Banked resets
 
